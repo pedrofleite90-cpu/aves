@@ -2,71 +2,1311 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Alas de Chile</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Leaflet.js -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-</head>
-<body>
 
-  <div id="contador-aves" class="text-sm font-bold">Cargando...</div>
-  <div id="map" style="height: 400px;"></div>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&family=Lora:wght@400;600&display=swap" rel="stylesheet" />
 
   <script>
-    // 1. Declaración ÚNICA de variables
-    let aves = [];
-    let aveActual = null;
-    let mapa;
-    let modoNino = false; // Declarada solo una vez
-    let audioSonando = false;
-    let notasTimer;
-
-    // 2. FUNCIÓN DE CARGA DINÁMICA
-    async function cargarBaseDeDatos() {
-      try {
-        const respuesta = await fetch('aves.json?t=' + new Date().getTime());
-        if (!respuesta.ok) throw new Error("Archivo no encontrado");
-        
-        aves = await respuesta.json();
-        
-        // Actualizar UI
-        document.getElementById('contador-aves').textContent = `🐦 ${aves.length} aves`;
-        
-        // Inicializar
-        if (aves.length > 0) {
-          aveActual = aves[0];
-          initMapa();
-          actualizarTarjeta(aveActual);
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cielo:'#D6EAF8', lago:'#2980B9', bosque:'#1E8449',
+            hoja:'#A9DFBF', tierra:'#784212', sol:'#F7DC6F',
+            coral:'#E74C3C', niebla:'#F0F4F8', pizarra:'#2C3E50',
+          },
+          fontFamily: { display:['Nunito','sans-serif'], prose:['Lora','serif'] }
         }
-      } catch (error) {
-        console.error("Error al cargar datos:", error);
       }
     }
-
-    // 3. INICIALIZACIÓN DE LA APP
-    document.addEventListener('DOMContentLoaded', () => {
-      cargarBaseDeDatos();
-    });
-
-    // 4. FUNCIONES (Asegúrate de que no estén duplicadas abajo)
-    function initMapa() {
-      if(mapa) mapa.remove();
-      mapa = L.map('map').setView([-35.6751, -71.5430], 5);
-      L.tileLayer('https://{tile}.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapa);
-      
-      aves.forEach(ave => {
-        if(ave.coordenadasEjemplo) {
-          L.marker(ave.coordenadasEjemplo).addTo(mapa).on('click', () => actualizarTarjeta(ave));
-        }
-      });
-    }
-
-    function actualizarTarjeta(ave) {
-      aveActual = ave;
-      // Aquí tu lógica de actualizar elementos del HTML
-      console.log("Mostrando:", ave.nombreComun);
-    }
   </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family:'Nunito',sans-serif; background:#F0F4F8; margin:0; }
+
+    @keyframes float {
+      0%,100%{ transform:translateY(0) rotate(-8deg); }
+      50%    { transform:translateY(-6px) rotate(8deg); }
+    }
+    .pluma   { animation:float 3.5s ease-in-out infinite; }
+    .pluma-2 { animation:float 4.2s ease-in-out infinite 0.8s; }
+    .pluma-3 { animation:float 3.8s ease-in-out infinite 1.4s; }
+
+    .modo-switch { position:relative; cursor:pointer; user-select:none; }
+    .switch-track { width:56px; height:28px; border-radius:14px; transition:background .3s; }
+    .switch-thumb {
+      position:absolute; top:3px; left:3px; width:22px; height:22px;
+      border-radius:50%; background:white; box-shadow:0 1px 4px rgba(0,0,0,.25);
+      transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    /* ── Mapa ── */
+    #map {
+      height:280px; border-radius:16px;
+      box-shadow:0 4px 24px rgba(41,128,185,.18); z-index:0;
+    }
+    .leaflet-control-attribution { font-size:9px !important; }
+    .leaflet-popup-content-wrapper {
+      border-radius:16px !important; padding:0 !important; overflow:hidden;
+      box-shadow:0 8px 32px rgba(0,0,0,.18) !important; border:none !important;
+    }
+    .leaflet-popup-content { margin:0 !important; width:220px !important; }
+    .leaflet-popup-tip-container { margin-top:-1px; }
+
+    /* Pin ave */
+    .ave-pin {
+      width:38px; height:38px; border-radius:50% 50% 50% 0;
+      transform:rotate(-45deg); display:flex; align-items:center; justify-content:center;
+      border:3px solid white; box-shadow:0 3px 10px rgba(0,0,0,.25);
+      cursor:pointer; transition:transform .2s;
+    }
+    .ave-pin:hover { transform:rotate(-45deg) scale(1.15); }
+    .ave-pin-emoji { transform:rotate(45deg); font-size:18px; line-height:1; }
+
+    /* ── Pin de ubicación propia ── */
+    .mi-pin-wrap {
+      width:44px; height:44px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .mi-pin-inner {
+      width:18px; height:18px; border-radius:50%;
+      background:#2980B9; border:3px solid white;
+      box-shadow:0 2px 8px rgba(41,128,185,.6);
+    }
+    @keyframes location-pulse {
+      0%   { transform:scale(1);   opacity:.6; }
+      100% { transform:scale(2.8); opacity:0; }
+    }
+    .mi-pin-ring {
+      position:absolute; inset:0; border-radius:50%;
+      background:rgba(41,128,185,.25);
+      animation:location-pulse 2s ease-out infinite;
+    }
+
+    /* ── Botón Mi Ubicación (flotante sobre mapa) ── */
+    #btn-ubicacion {
+      position:absolute; bottom:12px; right:12px; z-index:500;
+      width:42px; height:42px; border-radius:50%;
+      background:white; border:none;
+      box-shadow:0 2px 10px rgba(0,0,0,.2);
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.1rem; cursor:pointer;
+      transition:transform .15s, box-shadow .15s;
+    }
+    #btn-ubicacion:active { transform:scale(.93); }
+    #btn-ubicacion.activo { background:#2980B9; }
+    #btn-ubicacion.activo span { filter:brightness(10); }
+    #btn-ubicacion.cargando { animation:spin .8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* ── Modal Registro Avistamiento ── */
+    #modal-avistamiento {
+      position:fixed; inset:0; z-index:9000;
+      background:rgba(44,62,80,.55); backdrop-filter:blur(4px);
+      display:flex; align-items:flex-end; justify-content:center;
+      opacity:0; pointer-events:none; transition:opacity .3s ease;
+    }
+    #modal-avistamiento.visible { opacity:1; pointer-events:auto; }
+    #modal-sheet {
+      width:100%; max-width:480px;
+      background:white; border-radius:24px 24px 0 0;
+      padding:0 0 32px;
+      transform:translateY(100%); transition:transform .35s cubic-bezier(.34,1.2,.64,1);
+      max-height:90vh; overflow-y:auto;
+    }
+    #modal-avistamiento.visible #modal-sheet { transform:translateY(0); }
+    .modal-handle {
+      width:40px; height:4px; border-radius:2px;
+      background:#ddd; margin:12px auto 0;
+    }
+
+    /* ── Lista de avistamientos ── */
+    .avistamiento-item {
+      display:flex; align-items:center; gap:10px;
+      padding:10px 16px; border-bottom:1px solid #f0f0f0;
+      animation:slide-in .3s ease;
+    }
+    @keyframes slide-in {
+      from { opacity:0; transform:translateX(-10px); }
+      to   { opacity:1; transform:translateX(0); }
+    }
+    .avist-pin-mini {
+      width:36px; height:36px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.3rem; flex-shrink:0;
+    }
+
+    /* ── Pin de avistamiento en el mapa ── */
+    .avist-marker {
+      width:30px; height:30px; border-radius:50%;
+      border:3px solid white; box-shadow:0 2px 8px rgba(0,0,0,.25);
+      display:flex; align-items:center; justify-content:center;
+      font-size:14px; background:#27AE60;
+      animation:pop-in .4s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes pop-in {
+      from { transform:scale(0); opacity:0; }
+      to   { transform:scale(1); opacity:1; }
+    }
+
+    /* ── Resto de estilos originales ── */
+    @keyframes pulse-ring {
+      0%   { transform:scale(1);    opacity:.6; }
+      80%  { transform:scale(1.35); opacity:0; }
+      100% { transform:scale(1.35); opacity:0; }
+    }
+    .pulse-btn::before {
+      content:''; position:absolute; inset:0;
+      border-radius:9999px; background:#1E8449;
+      animation:pulse-ring 2s ease-out infinite;
+    }
+    .tarjeta-wrap { transition:opacity .35s ease, transform .35s ease; }
+    .tarjeta-wrap.oculta  { opacity:0; transform:translateY(8px); pointer-events:none; position:absolute; width:100%; }
+    .tarjeta-wrap.visible { opacity:1; transform:translateY(0); }
+    .tab-btn.activa { border-bottom:3px solid #1E8449; color:#1E8449; font-weight:700; }
+    .tab-panel { display:none; }
+    .tab-panel.activo { display:block; }
+    .fondo-nino { background:linear-gradient(135deg,#FFF9E6 0%,#E8F5E9 100%); }
+    @keyframes highlight-pulse {
+      0%  { box-shadow:0 4px 24px rgba(41,128,185,.1); }
+      40% { box-shadow:0 0 0 6px rgba(41,128,185,.3),0 4px 32px rgba(41,128,185,.25); }
+      100%{ box-shadow:0 4px 24px rgba(41,128,185,.1); }
+    }
+    .tarjeta-highlight { animation:highlight-pulse .8s ease; }
+
+    /* ── Carrusel ── */
+    .car-wrap {
+      position:relative; height:200px; border-radius:14px;
+      overflow:hidden; background:#111827;
+    }
+    .car-wrap.nino-borde {
+      border:4px solid var(--color-ave,#FFD700); border-radius:20px;
+      animation:borde-nino 2s ease-in-out infinite;
+    }
+    @keyframes borde-nino {
+      0%,100%{ border-color:var(--color-ave,#FFD700); }
+      50%    { border-color:#27AE60; }
+    }
+    .car-slide { position:absolute; inset:0; opacity:0; transition:opacity .5s ease; cursor:zoom-in; }
+    .car-slide.activo { opacity:1; }
+    .car-slide img { width:100%; height:100%; object-fit:cover; display:block; }
+    .car-placeholder {
+      width:100%; height:100%; display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      background:linear-gradient(135deg,#1a1a2e,#16213e);
+    }
+    .car-arrow {
+      position:absolute; top:50%; transform:translateY(-50%); z-index:5;
+      background:rgba(0,0,0,.45); color:white; border:none; border-radius:50%;
+      width:32px; height:32px; font-size:1rem; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      backdrop-filter:blur(4px); transition:background .2s;
+    }
+    .car-arrow:hover { background:rgba(0,0,0,.7); }
+    .car-prev { left:8px; } .car-next { right:8px; }
+    .car-dots { display:flex; justify-content:center; gap:6px; margin-top:8px; }
+    .car-dot { width:7px; height:7px; border-radius:50%; background:#ccc; cursor:pointer; transition:background .3s,transform .3s; }
+    .car-dot.activo { background:#1E8449; transform:scale(1.35); }
+
+    /* ── Audio ── */
+    .btn-audio {
+      width:100%; display:flex; align-items:center; justify-content:center;
+      gap:8px; padding:10px; border-radius:14px; border:none; cursor:pointer;
+      font-family:'Nunito',sans-serif; font-weight:900; font-size:.9rem;
+      color:white; position:relative; overflow:hidden; transition:transform .15s;
+    }
+    .btn-audio:active { transform:scale(.97); }
+    @keyframes audio-pulse {
+      0%,100%{ box-shadow:0 0 0 0 rgba(30,132,73,.4); }
+      50%    { box-shadow:0 0 0 10px rgba(30,132,73,0); }
+    }
+    .btn-audio.sonando { animation:audio-pulse 1.2s ease-in-out infinite; }
+    .nota { position:absolute; pointer-events:none; font-size:1.1rem; animation:nota-sube 1.6s ease-out forwards; }
+    @keyframes nota-sube {
+      0%  { opacity:1; transform:translateY(0) scale(1); }
+      100%{ opacity:0; transform:translateY(-55px) scale(.4); }
+    }
+
+    /* ── Lightbox ── */
+    #lightbox {
+      position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.95);
+      display:flex; align-items:center; justify-content:center;
+      opacity:0; pointer-events:none; transition:opacity .3s;
+    }
+    #lightbox.visible { opacity:1; pointer-events:auto; }
+    #lb-img { max-width:96vw; max-height:88vh; border-radius:10px; object-fit:contain; }
+    #lb-close {
+      position:absolute; top:16px; right:16px; background:rgba(255,255,255,.15);
+      color:white; border:none; border-radius:50%; width:44px; height:44px;
+      font-size:1.4rem; cursor:pointer; display:flex; align-items:center;
+      justify-content:center; backdrop-filter:blur(8px); transition:background .2s;
+    }
+    #lb-close:hover { background:rgba(255,255,255,.3); }
+    #lb-caption {
+      position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
+      background:rgba(0,0,0,.6); color:white; padding:5px 16px;
+      border-radius:9999px; font-size:.78rem; font-weight:700;
+      backdrop-filter:blur(6px); white-space:nowrap;
+    }
+
+    html { scroll-behavior:smooth; }
+  </style>
+</head>
+
+<body class="min-h-screen bg-niebla">
+
+<!-- ══ HEADER ══ -->
+<header id="app-header" class="sticky top-0 z-50 transition-colors duration-300"
+  style="background:linear-gradient(135deg,#1E8449 0%,#2980B9 100%);box-shadow:0 2px 16px rgba(30,132,73,.25);">
+  <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <div class="relative w-10 h-10 flex-shrink-0">
+        <span class="pluma   absolute text-xl" style="top:-2px;left:8px;">🪶</span>
+        <span class="pluma-2 absolute text-base" style="top:10px;left:0;opacity:.7;">🪶</span>
+      </div>
+      <div>
+        <h1 class="text-white font-black text-xl leading-tight tracking-tight">Alas de Chile</h1>
+        <p id="subtitulo-header" class="text-xs leading-none" style="color:rgba(255,255,255,.75);">Explorando la avifauna</p>
+      </div>
+    </div>
+    <button id="btn-modo" onclick="toggleModo()"
+      class="modo-switch flex items-center gap-2 bg-white/20 rounded-2xl px-3 py-2 border border-white/30 backdrop-blur-sm">
+      <span id="label-modo" class="text-white font-bold text-xs whitespace-nowrap">Adulto 📊</span>
+      <div class="relative">
+        <div id="switch-track" class="switch-track bg-white/40"></div>
+        <div id="switch-thumb" class="switch-thumb"></div>
+      </div>
+    </button>
+  </div>
+</header>
+
+
+<!-- ══ MAIN ══ -->
+<main class="max-w-md mx-auto px-4 pb-28">
+
+  <!-- ── MAPA ── -->
+  <section class="mt-4">
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="text-pizarra font-bold text-sm uppercase tracking-widest opacity-60">Mapa de Avistamientos</h2>
+      <span id="contador-aves" class="text-xs bg-bosque/10 text-bosque font-semibold px-2 py-0.5 rounded-full">🐦 10 aves</span>
+    </div>
+
+    <!-- Contenedor relativo para el botón flotante -->
+    <div style="position:relative;">
+      <div id="map"></div>
+      <!-- Botón Mi Ubicación — flotante sobre el mapa -->
+      <button id="btn-ubicacion" onclick="centrarMiUbicacion()" title="Mi ubicación">
+        <span>📍</span>
+      </button>
+    </div>
+
+    <!-- Barra de estado de geolocalización -->
+    <div id="geo-status" class="mt-2 hidden">
+      <div id="geo-status-inner" class="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl">
+        <span id="geo-icon">📍</span>
+        <span id="geo-texto">Buscando tu ubicación…</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats — ahora con contador dinámico de avistamientos -->
+  <section class="mt-4 grid grid-cols-3 gap-2">
+    <div class="bg-white rounded-xl p-3 text-center shadow-sm border border-hoja/30">
+      <p class="text-2xl font-black text-bosque">10</p>
+      <p class="text-xs text-pizarra/50 font-semibold mt-0.5">Especies</p>
+    </div>
+    <div class="bg-white rounded-xl p-3 text-center shadow-sm border border-cielo/50">
+      <p class="text-2xl font-black text-lago">5</p>
+      <p class="text-xs text-pizarra/50 font-semibold mt-0.5">Zonas</p>
+    </div>
+    <div class="bg-white rounded-xl p-3 text-center shadow-sm border border-bosque/20 cursor-pointer"
+         onclick="abrirModalAvistamientos()">
+      <p id="stat-avistamientos" class="text-2xl font-black text-bosque">0</p>
+      <p class="text-xs text-pizarra/50 font-semibold mt-0.5">Mis registros</p>
+    </div>
+  </section>
+
+  <!-- ── BOTÓN ¡VI UN AVE! ── -->
+  <section class="mt-6 flex justify-center">
+    <button onclick="iniciarRegistroAvistamiento()"
+      class="pulse-btn relative font-black text-white text-lg rounded-full px-10 py-4 shadow-xl active:scale-95 transition-transform"
+      style="background:linear-gradient(135deg,#1E8449,#27AE60);">
+      ¡Vi un ave! 🚀
+    </button>
+  </section>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div id="toast-texto" class="bg-pizarra text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-xl">
+      🎉 ¡Avistamiento registrado!
+    </div>
+  </div>
+
+  <!-- ══ TARJETA AVE ══ -->
+  <section class="mt-6">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-pizarra font-bold text-sm uppercase tracking-widest opacity-60">Ave seleccionada</h2>
+      <span id="badge-modo" class="text-xs font-bold px-3 py-0.5 rounded-full transition-colors duration-300 bg-bosque/10 text-bosque">Modo Adulto</span>
+    </div>
+
+    <div class="relative" style="min-height:340px;">
+
+      <!-- TARJETA ADULTO -->
+      <div id="tarjeta-adulto" class="tarjeta-wrap visible bg-white rounded-2xl overflow-hidden"
+           style="box-shadow:0 4px 24px rgba(44,62,80,.10);">
+        <div id="adulto-header" style="background:linear-gradient(135deg,#1E8449 0%,#2980B9 100%);" class="p-4 relative overflow-hidden">
+          <span class="absolute text-6xl opacity-10 -right-2 -top-2 pluma-3">🪶</span>
+          <div class="flex items-start gap-3">
+            <div id="adulto-emoji" class="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center text-4xl flex-shrink-0 shadow-inner">🌈</div>
+            <div>
+              <h3 id="adulto-nombre" class="text-white font-black text-xl leading-tight">Siete Colores</h3>
+              <p id="adulto-cientifico" class="text-white/75 text-xs font-prose italic mt-0.5">Tachuris rubrigastra</p>
+              <span id="adulto-zona" class="inline-block bg-white/20 text-white text-xs px-2 py-0.5 rounded-full mt-1">📍 Centro-Sur</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Carrusel fotos (adulto) ── -->
+        <div class="px-4 pt-3">
+          <div style="position:relative;">
+            <div id="car-adulto" class="car-wrap"></div>
+            <button class="car-arrow car-prev" onclick="carMover(-1)">‹</button>
+            <button class="car-arrow car-next" onclick="carMover(1)">›</button>
+          </div>
+          <div id="car-dots-adulto" class="car-dots"></div>
+        </div>
+
+        <!-- ── Botón audio (adulto) ── -->
+        <div class="px-4 pt-2 pb-1">
+          <button id="btn-audio-a" class="btn-audio" onclick="toggleAudio()"
+            style="background:linear-gradient(135deg,#1E8449,#2980B9);">
+            <span id="audio-icon-a">🔊</span>
+            <span id="audio-lbl-a">Escuchar Canto</span>
+          </button>
+        </div>
+
+        <div class="flex border-b border-gray-100">
+          <button class="tab-btn activa flex-1 py-2.5 text-xs font-bold text-pizarra/50 tracking-wide" onclick="abrirTab('habitat',this)">Hábitat</button>
+          <button class="tab-btn flex-1 py-2.5 text-xs font-bold text-pizarra/50 tracking-wide" onclick="abrirTab('conservacion',this)">Conservación</button>
+          <button class="tab-btn flex-1 py-2.5 text-xs font-bold text-pizarra/50 tracking-wide" onclick="abrirTab('avistamiento',this)">Avistamiento</button>
+        </div>
+        <div id="panel-habitat" class="tab-panel activo p-4">
+          <p id="adulto-habitat" class="text-pizarra/70 text-sm leading-relaxed font-prose"></p>
+          <div id="adulto-tags" class="mt-3 flex flex-wrap gap-1.5"></div>
+        </div>
+        <div id="panel-conservacion" class="tab-panel p-4">
+          <div class="flex items-center gap-3 mb-3">
+            <div id="adulto-conservacion-icon" class="w-10 h-10 rounded-full bg-hoja/30 flex items-center justify-center text-xl">✅</div>
+            <div>
+              <p id="adulto-conservacion-texto" class="font-black text-bosque text-sm">Preocupación Menor</p>
+              <p id="adulto-conservacion-codigo" class="text-xs text-pizarra/50">IUCN Red List · LC</p>
+            </div>
+          </div>
+          <p class="text-xs text-pizarra/40 font-semibold uppercase tracking-widest mb-2">Mejor época</p>
+          <div id="adulto-meses-barras" class="space-y-1.5"></div>
+        </div>
+        <div id="panel-avistamiento" class="tab-panel p-4">
+          <p class="text-xs text-pizarra/40 font-semibold uppercase tracking-widest mb-2">Mejor época</p>
+          <div id="adulto-meses-chips" class="flex flex-wrap gap-1.5"></div>
+          <div class="mt-4 bg-cielo/30 rounded-xl p-3">
+            <p class="text-xs text-lago font-semibold">📌 Coordenadas de ejemplo</p>
+            <p id="adulto-coords" class="font-mono text-xs text-pizarra/60 mt-1">—</p>
+            <p id="adulto-zona-label" class="text-xs text-pizarra/40 mt-0.5">—</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TARJETA NIÑO -->
+      <div id="tarjeta-nino" class="tarjeta-wrap oculta bg-white rounded-2xl overflow-hidden w-full"
+           style="box-shadow:0 4px 24px rgba(39,174,96,.20);">
+        <div class="fondo-nino p-5 text-center relative overflow-hidden">
+          <div class="absolute top-2 left-4 text-2xl pluma">⭐</div>
+          <div class="absolute top-3 right-6 text-xl pluma-2">✨</div>
+          <div class="absolute bottom-2 left-8 text-lg pluma-3">🌟</div>
+          <div id="nino-emoji" class="text-6xl mb-2" style="filter:drop-shadow(0 2px 6px rgba(0,0,0,.15))">🌈</div>
+          <h3 id="nino-nombre" class="font-black text-bosque leading-tight" style="font-size:1.6rem;">Siete Colores</h3>
+          <p id="nino-subtitulo" class="text-bosque/60 text-sm font-semibold mt-0.5">¡El Arcoíris Viviente! 🎨</p>
+          <div class="inline-flex items-center gap-1.5 bg-sol/60 border-2 border-sol rounded-full px-4 py-1.5 mt-3 shadow">
+            <span class="text-base">🏅</span>
+            <span id="nino-medalla" class="font-black text-tierra text-sm">El Arcoíris Viviente</span>
+          </div>
+        </div>
+
+        <!-- ── Carrusel fotos (niño) ── -->
+        <div class="px-4 pt-2">
+          <div style="position:relative;">
+            <div id="car-nino" class="car-wrap"></div>
+            <button class="car-arrow car-prev" onclick="carMover(-1)">‹</button>
+            <button class="car-arrow car-next" onclick="carMover(1)">›</button>
+          </div>
+          <div id="car-dots-nino" class="car-dots"></div>
+        </div>
+
+        <!-- ── Botón audio (niño) ── -->
+        <div class="px-4 pt-2 pb-1" style="position:relative;">
+          <button id="btn-audio-n" class="btn-audio" onclick="toggleAudio()"
+            style="background:linear-gradient(135deg,#27AE60,#F7DC6F);color:#1a3a2a;font-size:1rem;padding:12px;">
+            <span id="audio-icon-n">🔊</span>
+            <span id="audio-lbl-n">¡Escuchar el Canto!</span>
+          </button>
+        </div>
+
+        <div class="p-4">
+          <div class="bg-bosque/10 rounded-2xl p-4 mb-3 border-2 border-bosque/20">
+            <div class="flex items-center gap-2 mb-2"><span class="text-2xl">⚡</span><span class="font-black text-bosque" style="font-size:1.05rem;">¡Mi superpoder!</span></div>
+            <p id="nino-superpoder" class="text-pizarra font-bold leading-snug" style="font-size:.95rem;"></p>
+          </div>
+          <div class="bg-sol/20 rounded-2xl p-4 border-2 border-sol/40">
+            <div class="flex items-center gap-2 mb-2"><span class="text-2xl">🤩</span><span class="font-black text-tierra" style="font-size:1.05rem;">¿Sabías que…?</span></div>
+            <p id="nino-dato" class="text-pizarra font-bold leading-snug" style="font-size:.95rem;"></p>
+          </div>
+          <div class="mt-3 flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+            <div id="nino-color-circulo" class="w-10 h-10 rounded-full shadow-inner border-2 border-white" style="background:#FFD700;"></div>
+            <div>
+              <p class="text-xs text-pizarra/40 font-semibold uppercase tracking-wider">Mi color favorito</p>
+              <p id="nino-color-nombre" class="font-black text-pizarra text-sm">Amarillo dorado</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+
+<!-- Bottom Nav -->
+<nav class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100"
+     style="box-shadow:0 -2px 16px rgba(0,0,0,.06);">
+  <div class="max-w-md mx-auto flex justify-around py-2">
+    <button class="flex flex-col items-center gap-0.5 py-1 px-4 rounded-xl bg-bosque/5">
+      <span class="text-xl">🗺</span><span class="text-xs font-bold text-bosque">Mapa</span>
+    </button>
+    <button class="flex flex-col items-center gap-0.5 py-1 px-4" onclick="abrirModalAvistamientos()">
+      <span class="text-xl">📋</span><span class="text-xs font-semibold text-pizarra/40">Registros</span>
+    </button>
+    <button class="flex flex-col items-center gap-0.5 py-1 px-4">
+      <span class="text-xl">🦜</span><span class="text-xs font-semibold text-pizarra/40">Aves</span>
+    </button>
+    <button class="flex flex-col items-center gap-0.5 py-1 px-4">
+      <span class="text-xl">👤</span><span class="text-xs font-semibold text-pizarra/40">Perfil</span>
+    </button>
+  </div>
+</nav>
+
+
+<!-- ══════════════════════════════════════
+     MODAL REGISTRO AVISTAMIENTO
+══════════════════════════════════════ -->
+<div id="modal-avistamiento" onclick="cerrarModalSiFondo(event)">
+  <div id="modal-sheet">
+    <div class="modal-handle"></div>
+
+    <!-- Paso 1: Seleccionar ave -->
+    <div id="paso-1" class="px-5 pt-4">
+      <h3 class="font-black text-pizarra text-lg mb-1">¿Qué ave viste? 🐦</h3>
+      <p id="modal-coords-display" class="text-xs text-pizarra/40 font-semibold mb-3">Obteniendo tu ubicación…</p>
+
+      <!-- Grid de aves -->
+      <div class="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+        <!-- se llena por JS -->
+        <div id="modal-aves-grid"></div>
+      </div>
+    </div>
+
+    <!-- Paso 2: Confirmación -->
+    <div id="paso-2" class="px-5 pt-4 hidden">
+      <div class="text-center py-4">
+        <div id="confirm-emoji" class="text-6xl mb-2">🌈</div>
+        <h3 id="confirm-nombre" class="font-black text-bosque text-2xl">Siete Colores</h3>
+        <p id="confirm-cientifico" class="text-pizarra/50 text-sm italic mt-1">Tachuris rubrigastra</p>
+
+        <div class="mt-4 bg-cielo/30 rounded-2xl p-4 text-left space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="text-base">📍</span>
+            <div>
+              <p class="text-xs text-pizarra/40 font-semibold uppercase tracking-wider">Tu ubicación</p>
+              <p id="confirm-coords" class="font-mono text-xs text-pizarra/70 font-semibold">—</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-base">🕐</span>
+            <div>
+              <p class="text-xs text-pizarra/40 font-semibold uppercase tracking-wider">Fecha y hora</p>
+              <p id="confirm-fecha" class="text-xs text-pizarra/70 font-semibold">—</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-base">🎯</span>
+            <div>
+              <p class="text-xs text-pizarra/40 font-semibold uppercase tracking-wider">Precisión GPS</p>
+              <p id="confirm-precision" class="text-xs text-pizarra/70 font-semibold">—</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-5">
+          <button onclick="volverPaso1()"
+            class="flex-1 py-3 rounded-xl font-bold text-pizarra/60 border border-gray-200">
+            ← Cambiar
+          </button>
+          <button onclick="confirmarAvistamiento()"
+            class="flex-1 py-3 rounded-xl font-black text-white"
+            style="background:linear-gradient(135deg,#1E8449,#27AE60);">
+            ¡Registrar! ✅
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paso 3: Lista de avistamientos propios -->
+    <div id="paso-3" class="hidden">
+      <div class="px-5 pt-4 pb-2 flex items-center justify-between">
+        <h3 class="font-black text-pizarra text-lg">Mis avistamientos 📋</h3>
+        <button onclick="limpiarAvistamientos()"
+          class="text-xs text-coral font-bold px-3 py-1 rounded-full border border-coral/30">
+          Borrar todo
+        </button>
+      </div>
+      <div id="lista-avistamientos">
+        <!-- se llena por JS -->
+      </div>
+      <div id="lista-vacia" class="px-5 py-8 text-center hidden">
+        <p class="text-4xl mb-2">🔭</p>
+        <p class="text-pizarra/40 font-semibold text-sm">Aún no tienes avistamientos registrados.<br>¡Sal a explorar!</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══ JAVASCRIPT ══ -->
+<script>
+// ══════════════════════════════════════════════
+// BASE DE DATOS AVES
+// ══════════════════════════════════════════════
+
+// Variable global para almacenar las aves
+let aves = [];
+
+// Función para cargar los datos desde el archivo externo
+async function cargarBaseDeDatos() {
+  try {
+    // El ?t=... es vital para que Vercel y el navegador no usen una copia vieja
+    const respuesta = await fetch('aves.json?t=' + new Date().getTime());
+    if (!respuesta.ok) throw new Error("No se pudo cargar aves.json");
+    
+    aves = await respuesta.json(); // Ahora 'aves' tiene tus 50 registros
+    
+    console.log("¡Éxito! Aves cargadas:", aves.length);
+    
+    // Actualizar contador en la interfaz
+    const contador = document.getElementById('contador-aves');
+    if (contador) contador.textContent = `🐦 ${aves.length} aves`;
+    
+    // UNA VEZ CARGADOS LOS DATOS, inicializamos el mapa
+    initMapa();
+    // Seleccionamos la primera ave por defecto
+    if (aves.length > 0) actualizarTarjeta(aves[0]);
+    
+  } catch (err) {
+    console.error("Error al cargar aves.json: ", err);
+  }
+}
+
+// Reemplazamos tu antiguo DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+  cargarBaseDeDatos();
+});
+
+// Asegúrate de que initMapa utilice la variable 'aves' global, no una variable local interna.
+
+
+
+
+
+// ══ ESTADO GLOBAL ══
+let modoNino      = false;
+let aveActual     = avesData[3];
+let mapaLeaflet   = null;
+let marcadorActivo = null;
+
+// ── Geolocalización ──
+let miUbicacion      = null;   // { lat, lng, precision }
+let miMarcador       = null;   // marker Leaflet de mi posición
+let miCirculo        = null;   // círculo de precisión
+let geoWatchId       = null;   // ID del watchPosition
+let aveSeleccionadaModal = null;
+
+// ── Avistamientos registrados (en memoria) ──
+let avistamientos = [];
+
+const COLORES_BARRA = ['#1E8449','#27AE60','#2980B9','#1A6EA8','#2ECC71'];
+const ANCHOS        = [85,95,80,70,60];
+const COLORES_NOMBRE = {
+  '#D2691E':'Chocolate cálido','#228B22':'Verde bosque','#DC143C':'Rojo carmesí',
+  '#FFD700':'Amarillo dorado','#1C1C1C':'Negro profundo','#2F4F4F':'Verde pizarra',
+  '#FF6B35':'Naranja vibrante','#00A86B':'Verde jade','#F5F5DC':'Crema suave','#D2B48C':'Canela'
+};
+
+// ══════════════════════════════════════════════
+// MAPA LEAFLET
+// ══════════════════════════════════════════════
+function initMapa() {
+  mapaLeaflet = L.map('map', { center:[-35.5,-71.0], zoom:5, zoomControl:true, attributionControl:true });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution:'&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+    subdomains:'abcd', maxZoom:19
+  }).addTo(mapaLeaflet);
+  avesData.forEach(ave => agregarPin(ave));
+  setTimeout(() => { if (avesData[3]._marker) avesData[3]._marker.openPopup(); }, 800);
+}
+
+function agregarPin(ave) {
+  const iconHtml = `<div class="ave-pin" style="background:${ave.pinColor};"><span class="ave-pin-emoji">${ave.emoji}</span></div>`;
+  const icono = L.divIcon({ html:iconHtml, className:'', iconSize:[38,38], iconAnchor:[19,38], popupAnchor:[0,-38] });
+  const marker = L.marker(ave.coordenadasEjemplo, { icon:icono });
+  marker.bindPopup(construirPopupHtml(ave), { maxWidth:230, minWidth:220, className:'ave-popup' });
+  marker.on('popupopen', () => { marcadorActivo = ave; });
+  marker.addTo(mapaLeaflet);
+  ave._marker = marker;
+}
+
+function construirPopupHtml(ave) {
+  const esV = ave.datosAdulto.estadoConservacion.includes('Vulnerable');
+  const badgeColor = esV ? '#E74C3C' : '#1E8449';
+  const badgeTexto = esV ? '⚠️ Vulnerable' : '✅ LC';
+  return `<div style="font-family:'Nunito',sans-serif;border-radius:16px;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,${ave.pinColor},#2980B9);padding:12px 14px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:2rem;filter:drop-shadow(0 1px 3px rgba(0,0,0,.2))">${ave.emoji}</span>
+      <div>
+        <p style="color:white;font-weight:900;font-size:.95rem;margin:0;line-height:1.2">${ave.nombreComun}</p>
+        <p style="color:rgba(255,255,255,.75);font-size:.7rem;font-style:italic;margin:2px 0 0">${ave.nombreCientifico}</p>
+      </div>
+    </div>
+    <div style="padding:10px 14px 12px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+        <span style="background:rgba(${esV?'231,76,60':'30,132,73'},.1);color:${badgeColor};font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:9999px;">${badgeTexto}</span>
+        <span style="background:#EBF5FB;color:#2980B9;font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:9999px;">📍 ${ave.zona}</span>
+      </div>
+      <p style="font-size:.72rem;color:#5D6D7E;line-height:1.4;margin:0 0 10px;">${ave.datosAdulto.habitat.substring(0,90)}…</p>
+      <button onclick="verFichaCompleta('${ave.id}')"
+        style="width:100%;background:linear-gradient(135deg,#1E8449,#2980B9);color:white;border:none;border-radius:10px;padding:8px;font-family:'Nunito',sans-serif;font-weight:900;font-size:.8rem;cursor:pointer;">
+        Ver Ficha Completa 📋
+      </button>
+    </div>
+  </div>`;
+}
+
+function verFichaCompleta(aveId) {
+  const ave = avesData.find(a => a.id === aveId);
+  if (!ave) return;
+  aveActual = ave;
+  mapaLeaflet.closePopup();
+  detenerAudio();
+  actualizarTarjeta(ave);
+  setTimeout(() => { document.getElementById('tarjeta-adulto').scrollIntoView({ behavior:'smooth', block:'start' }); }, 300);
+}
+
+// ══════════════════════════════════════════════
+// GEOLOCALIZACIÓN — Fase 4
+// ══════════════════════════════════════════════
+
+// Ícono para MI posición (punto azul con anillo pulsante)
+function crearIconoMiPosicion() {
+  return L.divIcon({
+    html: `<div class="mi-pin-wrap" style="position:relative;">
+             <div class="mi-pin-ring"></div>
+             <div class="mi-pin-inner"></div>
+           </div>`,
+    className: '',
+    iconSize: [44,44],
+    iconAnchor: [22,22],
+    popupAnchor: [0,-22]
+  });
+}
+
+function centrarMiUbicacion() {
+  if (!navigator.geolocation) {
+    mostrarGeoStatus('error', '⚠️', 'Tu dispositivo no soporta geolocalización');
+    return;
+  }
+
+  const btn = document.getElementById('btn-ubicacion');
+  btn.classList.add('cargando');
+  mostrarGeoStatus('info', '⏳', 'Buscando tu ubicación…');
+
+  // Si ya tenemos posición, solo centra
+  if (miUbicacion) {
+    mapaLeaflet.flyTo([miUbicacion.lat, miUbicacion.lng], 14, { duration:1.2 });
+    btn.classList.remove('cargando');
+    btn.classList.add('activo');
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    pos => { onPosicionObtenida(pos); btn.classList.remove('cargando'); btn.classList.add('activo'); },
+    err => { btn.classList.remove('cargando'); manejarErrorGeo(err); },
+    { enableHighAccuracy:true, timeout:10000, maximumAge:0 }
+  );
+
+  // Vigilancia continua para actualizar posición
+  if (geoWatchId) navigator.geolocation.clearWatch(geoWatchId);
+  geoWatchId = navigator.geolocation.watchPosition(
+    pos => onPosicionObtenida(pos),
+    err => {}, // errores silenciosos en watch
+    { enableHighAccuracy:true, maximumAge:5000 }
+  );
+}
+
+function onPosicionObtenida(pos) {
+  const lat = pos.coords.latitude;
+  const lng = pos.coords.longitude;
+  const precision = Math.round(pos.coords.accuracy);
+
+  miUbicacion = { lat, lng, precision };
+
+  // Actualizar o crear marcador
+  if (miMarcador) {
+    miMarcador.setLatLng([lat, lng]);
+  } else {
+    miMarcador = L.marker([lat, lng], { icon:crearIconoMiPosicion(), zIndexOffset:1000 })
+      .bindPopup(`<div style="font-family:'Nunito',sans-serif;padding:10px 12px;min-width:160px;">
+        <p style="font-weight:900;color:#2C3E50;margin:0 0 4px;">📍 Tu ubicación</p>
+        <p style="font-size:.7rem;color:#7f8c8d;margin:0 0 2px;">Lat: ${lat.toFixed(5)}</p>
+        <p style="font-size:.7rem;color:#7f8c8d;margin:0 0 2px;">Lng: ${lng.toFixed(5)}</p>
+        <p style="font-size:.7rem;color:#7f8c8d;margin:0;">Precisión: ±${precision}m</p>
+      </div>`, { maxWidth:180 })
+      .addTo(mapaLeaflet);
+  }
+
+  // Círculo de precisión
+  if (miCirculo) {
+    miCirculo.setLatLng([lat, lng]).setRadius(precision);
+  } else {
+    miCirculo = L.circle([lat, lng], {
+      radius: precision, color:'#2980B9', fillColor:'#2980B9',
+      fillOpacity:.1, weight:1.5, dashArray:'4,4'
+    }).addTo(mapaLeaflet);
+  }
+
+  // Volar a la posición
+  mapaLeaflet.flyTo([lat, lng], 14, { duration:1.5 });
+
+  mostrarGeoStatus('ok', '✅', `Ubicado · ±${precision} m`);
+}
+
+function manejarErrorGeo(err) {
+  const mensajes = {
+    1: 'Permiso denegado. Actívalo en ajustes del navegador.',
+    2: 'No se pudo obtener la ubicación. ¿Tienes GPS activo?',
+    3: 'Tiempo de espera agotado. Intenta de nuevo.'
+  };
+  mostrarGeoStatus('error', '⚠️', mensajes[err.code] || 'Error desconocido');
+}
+
+function mostrarGeoStatus(tipo, icon, texto) {
+  const wrap  = document.getElementById('geo-status');
+  const inner = document.getElementById('geo-status-inner');
+  document.getElementById('geo-icon').textContent  = icon;
+  document.getElementById('geo-texto').textContent = texto;
+  wrap.classList.remove('hidden');
+
+  const estilos = {
+    ok:    'background:rgba(30,132,73,.08);color:#1E8449;',
+    error: 'background:rgba(231,76,60,.08);color:#E74C3C;',
+    info:  'background:rgba(41,128,185,.08);color:#2980B9;'
+  };
+  inner.style.cssText = estilos[tipo] || estilos.info;
+
+  if (tipo === 'ok') setTimeout(() => wrap.classList.add('hidden'), 4000);
+}
+
+// ══════════════════════════════════════════════
+// REGISTRO DE AVISTAMIENTO — Botón ¡Vi un ave!
+// ══════════════════════════════════════════════
+function iniciarRegistroAvistamiento() {
+  // Si no hay ubicación, intentar obtenerla primero
+  if (!miUbicacion && navigator.geolocation) {
+    mostrarGeoStatus('info', '⏳', 'Obteniendo tu ubicación para el registro…');
+    navigator.geolocation.getCurrentPosition(
+      pos => { onPosicionObtenida(pos); abrirModalRegistro(); },
+      ()  => { abrirModalRegistro(); }, // abre igual aunque falle
+      { enableHighAccuracy:true, timeout:8000, maximumAge:0 }
+    );
+  } else {
+    abrirModalRegistro();
+  }
+}
+
+function abrirModalRegistro() {
+  aveSeleccionadaModal = null;
+  mostrarPasoModal(1);
+
+  // Llenar grid de aves
+  const grid = document.getElementById('modal-aves-grid');
+  grid.innerHTML = '';
+  grid.style.display = 'contents';
+  avesData.forEach(ave => {
+    const btn = document.createElement('button');
+    btn.onclick = () => seleccionarAveModal(ave.id);
+    btn.style.cssText = `display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:14px;border:2px solid #f0f0f0;background:white;cursor:pointer;text-align:left;transition:border-color .2s,background .2s;width:100%;`;
+    btn.id = `modal-btn-${ave.id}`;
+    btn.innerHTML = `<span style="font-size:1.6rem;flex-shrink:0;">${ave.emoji}</span>
+      <div style="overflow:hidden;">
+        <p style="font-family:'Nunito',sans-serif;font-weight:900;font-size:.8rem;color:#2C3E50;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${ave.nombreComun}</p>
+        <p style="font-family:'Lora',serif;font-size:.6rem;color:#7f8c8d;margin:0;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${ave.nombreCientifico}</p>
+      </div>`;
+    grid.parentElement.appendChild(btn);
+  });
+
+  // Coords display
+  const coordsEl = document.getElementById('modal-coords-display');
+  if (miUbicacion) {
+    coordsEl.textContent = `📍 ${miUbicacion.lat.toFixed(4)}, ${miUbicacion.lng.toFixed(4)} · ±${miUbicacion.precision}m`;
+  } else {
+    coordsEl.textContent = '📍 Sin ubicación GPS (se registrará sin coordenadas)';
+  }
+
+  document.getElementById('modal-avistamiento').classList.add('visible');
+}
+
+function seleccionarAveModal(aveId) {
+  const ave = avesData.find(a => a.id === aveId);
+  if (!ave) return;
+  aveSeleccionadaModal = ave;
+
+  // Highlight selección
+  avesData.forEach(a => {
+    const b = document.getElementById(`modal-btn-${a.id}`);
+    if (b) { b.style.borderColor='#f0f0f0'; b.style.background='white'; }
+  });
+  const selBtn = document.getElementById(`modal-btn-${aveId}`);
+  if (selBtn) { selBtn.style.borderColor=ave.pinColor; selBtn.style.background=`${ave.pinColor}15`; }
+
+  // Pasar a paso 2
+  document.getElementById('confirm-emoji').textContent      = ave.emoji;
+  document.getElementById('confirm-nombre').textContent     = ave.nombreComun;
+  document.getElementById('confirm-cientifico').textContent = ave.nombreCientifico;
+
+  const ahora = new Date();
+  document.getElementById('confirm-fecha').textContent = ahora.toLocaleString('es-CL', {
+    weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'
+  });
+
+  if (miUbicacion) {
+    document.getElementById('confirm-coords').textContent    = `${miUbicacion.lat.toFixed(5)}, ${miUbicacion.lng.toFixed(5)}`;
+    document.getElementById('confirm-precision').textContent = `±${miUbicacion.precision} metros`;
+  } else {
+    document.getElementById('confirm-coords').textContent    = 'Sin GPS disponible';
+    document.getElementById('confirm-precision').textContent = '—';
+  }
+
+  mostrarPasoModal(2);
+}
+
+function volverPaso1() { mostrarPasoModal(1); }
+
+function confirmarAvistamiento() {
+  if (!aveSeleccionadaModal) return;
+
+  const registro = {
+    id:        Date.now(),
+    ave:       aveSeleccionadaModal,
+    fecha:     new Date(),
+    ubicacion: miUbicacion ? { ...miUbicacion } : null
+  };
+  avistamientos.unshift(registro); // más reciente primero
+
+  // Actualizar contador
+  document.getElementById('stat-avistamientos').textContent = avistamientos.length;
+
+  // Añadir pin en el mapa si hay coordenadas
+  if (registro.ubicacion) {
+    const iconAvist = L.divIcon({
+      html:`<div class="avist-marker">${registro.ave.emoji}</div>`,
+      className:'', iconSize:[30,30], iconAnchor:[15,15], popupAnchor:[0,-18]
+    });
+    L.marker([registro.ubicacion.lat, registro.ubicacion.lng], { icon:iconAvist })
+      .bindPopup(`<div style="font-family:'Nunito',sans-serif;padding:10px 12px;">
+        <p style="font-weight:900;color:#1E8449;margin:0 0 2px;">✅ Mi avistamiento</p>
+        <p style="font-weight:700;color:#2C3E50;margin:0 0 4px;">${registro.ave.emoji} ${registro.ave.nombreComun}</p>
+        <p style="font-size:.7rem;color:#7f8c8d;margin:0;">${registro.fecha.toLocaleString('es-CL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</p>
+      </div>`, { maxWidth:190 })
+      .addTo(mapaLeaflet);
+  }
+
+  cerrarModal();
+  mostrarToast(`✅ ${registro.ave.emoji} ${registro.ave.nombreComun} registrado!`);
+}
+
+// ── Modal lista de avistamientos ──
+function abrirModalAvistamientos() {
+  renderListaAvistamientos();
+  mostrarPasoModal(3);
+  document.getElementById('modal-avistamiento').classList.add('visible');
+}
+
+function renderListaAvistamientos() {
+  const lista = document.getElementById('lista-avistamientos');
+  const vacia = document.getElementById('lista-vacia');
+  lista.innerHTML = '';
+
+  if (avistamientos.length === 0) {
+    vacia.classList.remove('hidden');
+    return;
+  }
+  vacia.classList.add('hidden');
+
+  avistamientos.forEach(r => {
+    const item = document.createElement('div');
+    item.className = 'avistamiento-item';
+    const fechaStr = r.fecha.toLocaleString('es-CL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    const coordStr = r.ubicacion
+      ? `${r.ubicacion.lat.toFixed(3)}, ${r.ubicacion.lng.toFixed(3)}`
+      : 'Sin GPS';
+    item.innerHTML = `
+      <div class="avist-pin-mini" style="background:${r.ave.pinColor}20;">${r.ave.emoji}</div>
+      <div style="flex:1;min-width:0;">
+        <p style="font-family:'Nunito',sans-serif;font-weight:900;font-size:.85rem;color:#2C3E50;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.ave.nombreComun}</p>
+        <p style="font-size:.7rem;color:#7f8c8d;margin:2px 0 0;font-family:'Nunito',sans-serif;">🕐 ${fechaStr}</p>
+        <p style="font-size:.65rem;color:#95a5a6;margin:1px 0 0;font-family:monospace;">📍 ${coordStr}</p>
+      </div>
+      <span style="background:${r.ave.pinColor};color:white;font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:9999px;white-space:nowrap;">${r.ave.zona.split(' ')[0]}</span>`;
+    lista.appendChild(item);
+  });
+}
+
+function limpiarAvistamientos() {
+  if (avistamientos.length === 0) return;
+  if (!confirm('¿Borrar todos los avistamientos registrados?')) return;
+  avistamientos = [];
+  document.getElementById('stat-avistamientos').textContent = '0';
+  renderListaAvistamientos();
+  mostrarToast('🗑️ Registros eliminados');
+}
+
+// ── Helpers modal ──
+function mostrarPasoModal(n) {
+  document.getElementById('paso-1').classList.toggle('hidden', n !== 1);
+  document.getElementById('paso-2').classList.toggle('hidden', n !== 2);
+  document.getElementById('paso-3').classList.toggle('hidden', n !== 3);
+}
+
+function cerrarModal() {
+  document.getElementById('modal-avistamiento').classList.remove('visible');
+}
+
+function cerrarModalSiFondo(e) {
+  if (e.target === document.getElementById('modal-avistamiento')) cerrarModal();
+}
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+function mostrarToast(texto) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-texto').textContent = texto;
+  t.style.opacity = '1'; t.style.pointerEvents = 'auto';
+  setTimeout(() => { t.style.opacity='0'; t.style.pointerEvents='none'; }, 3000);
+}
+
+// ══════════════════════════════════════════════
+// ACTUALIZAR TARJETA
+// ══════════════════════════════════════════════
+function actualizarTarjeta(ave) {
+  const esV = ave.datosAdulto.estadoConservacion.includes('Vulnerable');
+
+  document.getElementById('adulto-emoji').textContent       = ave.emoji;
+  document.getElementById('adulto-nombre').textContent      = ave.nombreComun;
+  document.getElementById('adulto-cientifico').textContent  = ave.nombreCientifico;
+  document.getElementById('adulto-zona').textContent        = `📍 ${ave.zona}`;
+  document.getElementById('adulto-habitat').textContent     = ave.datosAdulto.habitat;
+  document.getElementById('adulto-header').style.background = `linear-gradient(135deg,${ave.pinColor} 0%,#2980B9 100%)`;
+
+  const tagsEl = document.getElementById('adulto-tags'); tagsEl.innerHTML = '';
+  ave.datosAdulto.habitat.split(',')[0].split(' ').slice(0,3).forEach(p => {
+    if (p.length > 3) tagsEl.innerHTML += `<span style="background:rgba(169,223,191,.4);color:#1E8449;font-size:.7rem;font-weight:700;padding:4px 10px;border-radius:9999px;">${p}</span>`;
+  });
+
+  document.getElementById('adulto-conservacion-icon').textContent      = esV ? '⚠️' : '✅';
+  document.getElementById('adulto-conservacion-icon').style.background = esV ? 'rgba(231,76,60,.15)' : 'rgba(169,223,191,.3)';
+  document.getElementById('adulto-conservacion-texto').textContent      = esV ? 'Vulnerable' : 'Preocupación Menor';
+  document.getElementById('adulto-conservacion-texto').style.color      = esV ? '#E74C3C' : '#1E8449';
+  document.getElementById('adulto-conservacion-codigo').textContent     = ave.datosAdulto.estadoConservacion;
+
+  const barrasEl = document.getElementById('adulto-meses-barras'); barrasEl.innerHTML = '';
+  ave.datosAdulto.mesesAvistamiento.forEach((mes,i) => {
+    barrasEl.innerHTML += `<div style="display:flex;align-items:center;gap:8px;font-size:.72rem;">
+      <span style="width:24px;color:rgba(44,62,80,.4);font-weight:600;">${mes}</span>
+      <div style="flex:1;background:#f0f0f0;border-radius:9999px;height:8px;">
+        <div style="width:${ANCHOS[i]||70}%;background:${COLORES_BARRA[i]||'#1E8449'};height:8px;border-radius:9999px;transition:width 1s ease;"></div>
+      </div></div>`;
+  });
+
+  const chipsEl = document.getElementById('adulto-meses-chips'); chipsEl.innerHTML = '';
+  ave.datosAdulto.mesesAvistamiento.forEach((mes,i) => {
+    chipsEl.innerHTML += `<span style="background:${i<3?'#1E8449':'#2980B9'};color:white;font-size:.7rem;font-weight:700;padding:4px 12px;border-radius:9999px;">${mes}</span>`;
+  });
+
+  document.getElementById('adulto-coords').textContent     = `${ave.coordenadasEjemplo[0]}, ${ave.coordenadasEjemplo[1]}`;
+  document.getElementById('adulto-zona-label').textContent = ave.zona;
+
+  document.getElementById('nino-emoji').textContent         = ave.emoji;
+  document.getElementById('nino-nombre').textContent        = ave.nombreComun;
+  document.getElementById('nino-subtitulo').textContent     = `¡${ave.datosNino.medallaNombre}! 🎨`;
+  document.getElementById('nino-medalla').textContent       = ave.datosNino.medallaNombre;
+  document.getElementById('nino-superpoder').textContent    = ave.datosNino.superpoder;
+  document.getElementById('nino-dato').textContent          = ave.datosNino.datoCurioso;
+  document.getElementById('nino-color-circulo').style.background = ave.datosNino.colorPrincipal;
+  document.getElementById('nino-color-nombre').textContent  = COLORES_NOMBRE[ave.datosNino.colorPrincipal] || ave.datosNino.colorPrincipal;
+
+  // Carrusel y borde niño
+  if (ave.imagenes) construirCarrusel(ave);
+
+  const tarjetaVisible = modoNino ? document.getElementById('tarjeta-nino') : document.getElementById('tarjeta-adulto');
+  tarjetaVisible.classList.remove('tarjeta-highlight');
+  void tarjetaVisible.offsetWidth;
+  tarjetaVisible.classList.add('tarjeta-highlight');
+  setTimeout(() => tarjetaVisible.classList.remove('tarjeta-highlight'), 900);
+
+  abrirTab('habitat', document.querySelector('.tab-btn'));
+}
+
+// ══════════════════════════════════════════════
+// TOGGLE MODO
+// ══════════════════════════════════════════════
+function toggleModo() {
+  modoNino = !modoNino;
+  const label=document.getElementById('label-modo'), track=document.getElementById('switch-track');
+  const thumb=document.getElementById('switch-thumb'), badge=document.getElementById('badge-modo');
+  const header=document.getElementById('app-header'), sub=document.getElementById('subtitulo-header');
+  const tA=document.getElementById('tarjeta-adulto'), tN=document.getElementById('tarjeta-nino');
+
+  if (modoNino) {
+    label.textContent='Niño 🧒'; track.style.background='#F7DC6F'; thumb.style.transform='translateX(28px)';
+    badge.textContent='🧒 Modo Niño';
+    badge.style.cssText='font-size:.75rem;font-weight:700;padding:2px 12px;border-radius:9999px;background:rgba(247,220,111,.3);color:#784212;';
+    header.style.background='linear-gradient(135deg,#27AE60 0%,#F7DC6F 100%)';
+    sub.textContent='¡Descubre los poderes de las aves!';
+    document.getElementById('car-nino')?.classList.add('nino-borde');
+    tA.classList.remove('visible'); tA.classList.add('oculta');
+    setTimeout(()=>{ tN.classList.remove('oculta'); tN.classList.add('visible'); }, 200);
+  } else {
+    label.textContent='Adulto 📊'; track.style.background='rgba(255,255,255,.4)'; thumb.style.transform='translateX(0)';
+    badge.textContent='📊 Modo Adulto';
+    badge.style.cssText='font-size:.75rem;font-weight:700;padding:2px 12px;border-radius:9999px;background:rgba(30,132,73,.1);color:#1E8449;';
+    header.style.background='linear-gradient(135deg,#1E8449 0%,#2980B9 100%)';
+    sub.textContent='Explorando la avifauna';
+    document.getElementById('car-nino')?.classList.remove('nino-borde');
+    tN.classList.remove('visible'); tN.classList.add('oculta');
+    setTimeout(()=>{ tA.classList.remove('oculta'); tA.classList.add('visible'); }, 200);
+  }
+}
+
+// ══════════════════════════════════════════════
+// PESTAÑAS
+// ══════════════════════════════════════════════
+function abrirTab(nombre, boton) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('activo'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('activa'));
+  document.getElementById('panel-'+nombre).classList.add('activo');
+  boton.classList.add('activa');
+}
+
+// ══════════════════════════════════════════════
+// INICIO
+// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+// ESTADO MULTIMEDIA
+// ══════════════════════════════════════════════
+let carIdx        = 0;
+let audioObj      = null;
+let audioSonando  = false;
+let notasTimer    = null;
+
+// ══════════════════════════════════════════════
+// CARRUSEL
+// ══════════════════════════════════════════════
+function construirCarrusel(ave) {
+  carIdx = 0;
+
+  // Construir slides en ambos wrappers (adulto y niño)
+  [
+    { wrapId:'car-adulto',  dotsId:'car-dots-adulto' },
+    { wrapId:'car-nino',    dotsId:'car-dots-nino'   }
+  ].forEach(({ wrapId, dotsId }) => {
+    const wrap = document.getElementById(wrapId);
+    const dots = document.getElementById(dotsId);
+    if (!wrap || !dots) return;
+
+    wrap.innerHTML = '';
+    dots.innerHTML = '';
+
+    ave.imagenes.forEach((url, i) => {
+      // Slide
+      const slide = document.createElement('div');
+      slide.className = 'car-slide' + (i === 0 ? ' activo' : '');
+      slide.onclick = () => abrirLightbox(url, ave.nombreComun, i + 1, ave.imagenes.length);
+
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = `${ave.nombreComun} — foto ${i + 1}`;
+      img.onerror = function () {
+        this.parentElement.innerHTML = `
+          <div class="car-placeholder">
+            <span style="font-size:4rem;">${ave.emoji}</span>
+            <p style="color:rgba(255,255,255,.45);font-size:.75rem;margin-top:8px;">${ave.nombreComun}</p>
+          </div>`;
+      };
+      slide.appendChild(img);
+      wrap.appendChild(slide);
+
+      // Dot
+      const dot = document.createElement('div');
+      dot.className = 'car-dot' + (i === 0 ? ' activo' : '');
+      dot.onclick = () => irASlide(i);
+      dots.appendChild(dot);
+    });
+  });
+
+  // Borde animado niño
+  const wNino = document.getElementById('car-nino');
+  if (wNino) {
+    document.documentElement.style.setProperty('--color-ave', ave.datosNino.colorPrincipal);
+    wNino.classList.toggle('nino-borde', modoNino);
+  }
+}
+
+function irASlide(idx) {
+  const total = aveActual.imagenes ? aveActual.imagenes.length : 0;
+  if (!total) return;
+  carIdx = ((idx % total) + total) % total;
+
+  ['car-adulto','car-nino'].forEach(wId => {
+    document.getElementById(wId)
+      ?.querySelectorAll('.car-slide')
+      .forEach((s, i) => s.classList.toggle('activo', i === carIdx));
+  });
+  ['car-dots-adulto','car-dots-nino'].forEach(dId => {
+    document.getElementById(dId)
+      ?.querySelectorAll('.car-dot')
+      .forEach((d, i) => d.classList.toggle('activo', i === carIdx));
+  });
+}
+
+function carMover(dir) { irASlide(carIdx + dir); }
+
+// ══════════════════════════════════════════════
+// LIGHTBOX
+// ══════════════════════════════════════════════
+function abrirLightbox(url, nombre, idx, total) {
+  document.getElementById('lb-img').src          = url;
+  document.getElementById('lb-caption').textContent = `${nombre} · Foto ${idx} de ${total}`;
+  document.getElementById('lightbox').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarLightbox(e) {
+  const lb = document.getElementById('lightbox');
+  if (e && e.target !== lb && e.target !== document.getElementById('lb-close')) return;
+  lb.classList.remove('visible');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarLightbox(); });
+
+// ══════════════════════════════════════════════
+// AUDIO
+// ══════════════════════════════════════════════
+function detenerAudio() {
+  if (audioObj) { audioObj.pause(); audioObj.currentTime = 0; }
+  audioSonando = false;
+  clearInterval(notasTimer);
+  document.querySelectorAll('.nota').forEach(n => n.remove());
+  // Resetear ambos botones
+  ['btn-audio-a','btn-audio-n'].forEach(id => {
+    document.getElementById(id)?.classList.remove('sonando');
+  });
+  if (document.getElementById('audio-icon-a')) {
+    document.getElementById('audio-icon-a').textContent  = '🔊';
+    document.getElementById('audio-lbl-a').textContent   = 'Escuchar Canto';
+    document.getElementById('audio-icon-n').textContent  = '🔊';
+    document.getElementById('audio-lbl-n').textContent   = '¡Escuchar el Canto!';
+  }
+}
+
+function toggleAudio() {
+  if (audioSonando) { detenerAudio(); return; }
+  if (!aveActual.sonidoUrl) {
+    mostrarToast('🔇 Esta ave no tiene audio disponible');
+    return;
+  }
+
+  detenerAudio();
+  audioObj = new Audio(aveActual.sonidoUrl);
+  audioObj.volume = 0.85;
+
+  audioObj.play().then(() => {
+    audioSonando = true;
+
+    ['btn-audio-a','btn-audio-n'].forEach(id => {
+      document.getElementById(id)?.classList.add('sonando');
+    });
+    document.getElementById('audio-icon-a').textContent = '⏹';
+    document.getElementById('audio-lbl-a').textContent  = 'Detener Canto';
+    document.getElementById('audio-icon-n').textContent = '🎵';
+    document.getElementById('audio-lbl-n').textContent  = 'Detener Canto';
+
+    if (modoNino) lanzarNotas();
+
+    audioObj.onended = () => detenerAudio();
+
+  }).catch(() => {
+    mostrarToast('🔇 No se pudo cargar el audio');
+  });
+}
+
+function lanzarNotas() {
+  const emojis = ['🎵','🎶','✨','🎼','🎵','🎶'];
+  const ref = document.getElementById('btn-audio-n');
+  if (!ref) return;
+  clearInterval(notasTimer);
+  notasTimer = setInterval(() => {
+    if (!audioSonando) { clearInterval(notasTimer); return; }
+    const nota = document.createElement('div');
+    nota.className = 'nota';
+    nota.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    nota.style.left   = (15 + Math.random() * 70) + '%';
+    nota.style.bottom = '48px';
+    ref.parentElement.style.position = 'relative';
+    ref.parentElement.appendChild(nota);
+    setTimeout(() => nota.remove(), 1700);
+  }, 380);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initMapa();
+  actualizarTarjeta(aveActual);
+});
+</script>
+
+<!-- ── Lightbox ── -->
+<div id="lightbox" onclick="cerrarLightbox(event)">
+  <button id="lb-close" onclick="cerrarLightbox()">✕</button>
+  <img id="lb-img" src="" alt="" />
+  <div id="lb-caption"></div>
+</div>
+
 </body>
 </html>
