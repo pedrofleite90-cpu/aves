@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function cargarBaseDeDatos() {
   // El truco es el "?t=" + timestamp, esto le dice al navegador: 
   // "Este es un archivo nuevo, no uses el viejo"
-  fetch(`/aves.json?t=${new Date().getTime()}`)
+  fetch(`aves.json?t=${new Date().getTime()}`)
     .then(response => {
       if (!response.ok) throw new Error("Error en la carga");
       return response.json();
