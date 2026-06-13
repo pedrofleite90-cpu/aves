@@ -1,332 +1,41 @@
-let mapa;
-let marcadorUsuario = null; // Guarda el pin del GPS del usuario
-let aves = [];
-let aveActual = null;
-let modoAdulto = true;
-let fotosActuales = [];
-let fotoIndex = 0;
-let audioObjeto = null;
-let vozActiva = false;
-
-// Variables globales de paginación para el Álbum
-let paginaActualAlbum = 1;
-const avesPorPagina = 10;
-
-document.addEventListener("DOMContentLoaded", () => {
-  cargarBaseDeDatos();
-});
-
-function cargarBaseDeDatos() {
-  fetch('aves.json')
-    .then(response => response.json())
-    .then(data => {
-      aves = data;
-      document.getElementById('contador-aves').textContent = `🐦 ${aves.length} aves`;
-      initMapa();
-      renderizarAlbum(); 
-      if(aves.length > 0) {
-        seleccionarAve(aves[0], false); // Iniciamos sin mover el mapa al arrancar
-      }
-    })
-    .catch(err => console.error("Error cargando aves.json: ", err));
-}
-
-// Generador de coordenadas simuladas a lo largo de Chile basadas en la zona para evitar que se amontonen
-function obtenerCoordenadasPorZona(ave) {
-  if (ave.coordenadasEjemplo) return ave.coordenadasEjemplo;
-  
-  // Base de latitudes aproximadas en Chile por zona
-  let lat = -33.4489; 
-  let lng = -70.6693;
-  
-  const zona = ave.zona.toLowerCase();
-  if (zona.includes("norte") || zona.includes("altiplano")) {
-    lat = -22.0 - (ave.id * 0.15);
-    lng = -68.5 - (ave.id % 3 * 0.1);
-  } else if (zona.includes("sur") || zona.includes("patagonia") || zona.includes("austral")) {
-    lat = -42.0 - (ave.id * 0.12);
-    lng = -72.5 - (ave.id % 3 * 0.1);
-  } else if (zona.includes("juan fernández")) {
-    lat = -33.6350;
-    lng = -78.8319 + (ave.id * 0.01);
-  } else { // Centro / Todo Chile
-    lat = -32.0 - (ave.id * 0.18);
-    lng = -71.0 - (ave.id % 3 * 0.08);
-  }
-  return [lat, lng];
-}
-
-function initMapa() {
-  // Centrado inicial en el centro-sur de Chile con zoom apto para móviles y escritorio
-  mapa = L.map('map').setView([-38.0000, -72.0000], 5);
-  
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(mapa);
-
-  aves.forEach(ave => {
-    // Asignamos coordenadas calculadas dinámicamente si no existen
-    ave.coordenadasEjemplo = obtenerCoordenadasPorZona(ave);
-
-    // Color por defecto si no viene especificado en el JSON
-    const colorPin = ave.pinColor || '#1E8449'; 
-    
-    const pinHtml = `
-      <div class="ave-pin" style="background:${colorPin};">
-        <span class="ave-pin-emoji">${ave.emoji}</span>
-      </div>
-    `;
-    
-    const customIcon = L.divIcon({
-      html: pinHtml,
-      className: '',
-      iconSize: [38, 38],
-      iconAnchor: [19, 38]
-    });
-
-    const marker = L.marker(ave.coordenadasEjemplo, { icon: customIcon }).addTo(mapa);
-    
-    marker.on('click', () => {
-      seleccionarAve(ave, true); // Al hacer clic en el mapa, centramos suavemente
-    });
-  });
-}
-
-function seleccionarAve(ave, moverMapa = true) {
-  aveActual = ave;
-  
-  // Elementos Adulto
-  document.getElementById('adulto-emoji').textContent = ave.emoji;
-  document.getElementById('adulto-nombre').textContent = ave.nombreComun;
-  document.getElementById('adulto-cientifico').textContent = ave.nombreCientifico;
-  document.getElementById('adulto-habitat').textContent = ave.habitat;
-  document.getElementById('adulto-conservacion').textContent = ave.conservacion;
-
-  // Elementos Niño
-  document.getElementById('nino-emoji').textContent = ave.emoji;
-  document.getElementById('nino-nombre').textContent = ave.nombreComun;
-  document.getElementById('nino-superpoder').textContent = ave.superpoder;
-
-  // Reseteo de sonidos y voces activas
-  if(audioObjeto) { audioObjeto.pause(); audioObjeto = null; }
-  document.getElementById('btn-audio-a').textContent = "🔊 Escuchar Canto";
-  window.speechSynthesis?.cancel();
-  vozActiva = false;
-  document.getElementById('btn-voz-nino').textContent = "🐦 ¡Háblame!";
-
-  // Efecto de auto-zoom y vuelo dinámico en el mapa
-  if (moverMapa && mapa && ave.coordenadasEjemplo) {
-    mapa.flyTo(ave.coordenadasEjemplo, 8, {
-      animate: true,
-      duration: 1.5 
-    });
-  }
-
-  obtenerFotosINaturalist(ave.nombreCientifico);
-}
-
 function obtenerFotosINaturalist(nombreCientifico) {
   const contenedorAdulto = document.getElementById('car-adulto');
   const contenedorNino = document.getElementById('car-nino');
   
-  contenedorAdulto.innerHTML = `<div class="text-white text-xs p-4">Buscando fotos...</div>`;
-  contenedorNino.innerHTML = `<div class="text-pizarra text-xs p-4">Buscando fotos...</div>`;
+  // Mostrar estados de carga limpios adaptados a tus estilos nativos
+  if (contenedorAdulto) contenedorAdulto.innerHTML = `<div class="text-white text-xs p-4 h-full flex items-center justify-center">🔍 Buscando fotos reales...</div>`;
+  if (contenedorNino) contenedorNino.innerHTML = `<div class="text-pizarra text-xs p-4 h-full flex items-center justify-center">🎨 Buscando fotitos...</div>`;
 
+  // Consultamos el taxón en iNaturalist de forma exacta
   fetch(`https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(nombreCientifico)}&per_page=1`)
     .then(res => res.json())
     .then(data => {
-      // Limitamos estrictamente a un máximo de 3 imágenes reales
-      if(data.results && data.results.length > 0 && data.results[0].taxon_photos && data.results[0].taxon_photos.length > 0) {
-        fotosActuales = data.results[0].taxon_photos.slice(0, 3).map(p => p.photo.medium_url);
+      // 1. Verificamos rigurosamente que existan resultados y fotos asociadas al taxón
+      if (data.results && data.results.length > 0 && data.results[0].taxon_photos && data.results[0].taxon_photos.length > 0) {
+        
+        // 2. Extraemos estrictamente un máximo de 3 fotos reales (.slice(0,3))
+        fotosActuales = data.results[0].taxon_photos.slice(0, 3).map(p => {
+          // El objeto real es p.photo.url
+          let urlOriginal = p.photo.url;
+          
+          // 3. iNaturalist da por defecto tamaño 'square' (75x75). 
+          // Lo cambiamos dinámicamente a 'medium' para que se adapte perfecto al celular sin pixelarse.
+          return urlOriginal ? urlOriginal.replace("square", "medium") : "https://images.unsplash.com/photo-1484557052118-f32bd25b45b5?w=500";
+        });
+
       } else {
+        // Respaldo si el ave no tiene registros fotográficos públicos en iNaturalist
         fotosActuales = ["https://images.unsplash.com/photo-1484557052118-f32bd25b45b5?w=500"];
       }
+      
       fotoIndex = 0;
       dibujarCarrusel();
     })
-    .catch(() => {
+    .catch((err) => {
+      console.error("Error conectando a iNaturalist:", err);
+      // Respaldo en caso de error de red o desconexión de la API
       fotosActuales = ["https://images.unsplash.com/photo-1484557052118-f32bd25b45b5?w=500"];
       fotoIndex = 0;
       dibujarCarrusel();
     });
-}
-
-function dibujarCarrusel() {
-  const contA = document.getElementById('car-adulto');
-  const contN = document.getElementById('car-nino');
-  const dotsA = document.getElementById('car-dots-adulto');
-  const dotsN = document.getElementById('car-dots-nino');
-
-  contA.innerHTML = ""; contN.innerHTML = "";
-  dotsA.innerHTML = ""; dotsN.innerHTML = "";
-
-  fotosActuales.forEach((url, index) => {
-    const claseActiva = index === fotoIndex ? 'activo' : '';
-    contA.innerHTML += `<div class="car-slide ${claseActiva}"><img src="${url}" alt="foto"></div>`;
-    contN.innerHTML += `<div class="car-slide ${claseActiva}"><img src="${url}" alt="foto"></div>`;
-
-    const dotActivo = index === fotoIndex ? 'activo' : '';
-    dotsA.innerHTML += `<div class="car-dot ${dotActivo}" onclick="irAFoto(${index})"></div>`;
-    dotsN.innerHTML += `<div class="car-dot ${dotActivo}" onclick="irAFoto(${index})"></div>`;
-  });
-}
-
-function carMover(direccion) {
-  if (fotosActuales.length === 0) return;
-  fotoIndex += direccion;
-  if (fotoIndex >= fotosActuales.length) fotoIndex = 0;
-  if (fotoIndex < 0) fotoIndex = fotosActuales.length - 1;
-  dibujarCarrusel();
-}
-
-function irAFoto(index) {
-  fotoIndex = index;
-  dibujarCarrusel();
-}
-
-function renderizarAlbum() {
-  const grid = document.getElementById('album-grid');
-  grid.innerHTML = "";
-
-  const inicio = (paginaActualAlbum - 1) * avesPorPagina;
-  const fin = inicio + avesPorPagina;
-  const avesPagina = aves.slice(inicio, fin);
-
-  avesPagina.forEach(ave => {
-    grid.innerHTML += `
-      <div class="border border-gray-100 p-3 rounded-xl text-center bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors" 
-           onclick="event.stopPropagation(); seleccionarAvePorId(${ave.id})">
-        <div class="text-3xl mb-1">${ave.emoji}</div>
-        <div class="font-black text-sm text-pizarra">${ave.nombreComun}</div>
-        <div class="text-xs text-pizarra/50 italic">${ave.nombreCientifico}</div>
-      </div>
-    `;
-  });
-
-  const totalPaginas = Math.ceil(aves.length / avesPorPagina) || 1;
-  document.getElementById('txt-paginacion').textContent = `Página ${paginaActualAlbum} de ${totalPaginas}`;
-  document.getElementById('btn-pag-ant').disabled = paginaActualAlbum === 1;
-  document.getElementById('btn-pag-sig').disabled = paginaActualAlbum === totalPaginas;
-}
-
-function cambiarPaginaAlbum(direccion) {
-  paginaActualAlbum += direccion;
-  renderizarAlbum();
-}
-
-function seleccionarAvePorId(id) {
-  // Los IDs en tu JSON son de tipo numérico
-  const encontrado = aves.find(a => a.id === Number(id));
-  if(encontrado) {
-    seleccionarAve(encontrado, true); 
-    document.getElementById('app-header').scrollIntoView({ behavior: 'smooth' });
-  }
-}
-
-function toggleModo() {
-  modoAdulto = !modoAdulto;
-  const tAdulto = document.getElementById('tarjeta-adulto');
-  const tNino = document.getElementById('tarjeta-nino');
-  const lbl = document.getElementById('label-modo');
-  const thumb = document.getElementById('switch-thumb');
-
-  if(modoAdulto) {
-    tAdulto.classList.remove('oculta'); tAdulto.classList.add('visible');
-    tNino.classList.remove('visible'); tNino.classList.add('oculta');
-    lbl.textContent = "Adulto 📊"; thumb.style.transform = "translateX(0px)";
-  } else {
-    tAdulto.classList.remove('visible'); tAdulto.classList.add('oculta');
-    tNino.classList.remove('oculta'); tNino.classList.add('visible');
-    lbl.textContent = "Niño 🧸"; thumb.style.transform = "translateX(28px)";
-  }
-}
-
-function toggleAudio() {
-  if(!aveActual || !aveActual.sonidoUrl) {
-    alert("Canto no disponible para esta especie en este momento.");
-    return;
-  }
-  const btn = document.getElementById('btn-audio-a');
-  if(audioObjeto && !audioObjeto.paused) {
-    audioObjeto.pause();
-    btn.textContent = "🔊 Escuchar Canto";
-  } else {
-    if(!audioObjeto) audioObjeto = new Audio(aveActual.sonidoUrl);
-    audioObjeto.play();
-    btn.textContent = "⏸ Pausar Canto";
-    audioObjeto.onended = () => btn.textContent = "🔊 Escuchar Canto";
-  }
-}
-
-function abrirTab(tabName, boton) {
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('activo'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('activa'));
-  document.getElementById(`panel-${tabName}`).classList.add('activo');
-  boton.classList.add('activa');
-}
-
-function toggleVoz() {
-  if(!aveActual) return;
-  const btn = document.getElementById('btn-voz-nino');
-  if(vozActiva) {
-    window.speechSynthesis?.cancel();
-    vozActiva = false;
-    btn.textContent = "🐦 ¡Háblame!";
-  } else {
-    // Usamos datoCurioso en lugar de fraseNino que no está en el JSON
-    const textoInformativo = aveActual.datoCurioso || "¡Soy un ave fantástica de Chile!";
-    const texto = `¡Hola! Soy el ${aveActual.nombreComun}. ${textoInformativo} ¡Mi superpoder es: ${aveActual.superpoder}!`;
-    
-    const ut = new SpeechSynthesisUtterance(texto);
-    ut.lang = 'es-CL';
-    ut.onend = () => {
-      vozActiva = false;
-      btn.textContent = "🐦 ¡Háblame!";
-    };
-    window.speechSynthesis?.speak(ut);
-    vozActiva = true;
-    btn.textContent = "⏸ Detener Voz";
-  }
-}
-
-function centrarMiUbicacion() {
-  if (!navigator.geolocation) {
-    alert("Tu navegador o teléfono no soporta la geolocalización.");
-    return;
-  }
-
-  const btnUbicacion = document.getElementById('btn-ubicacion');
-  btnUbicacion.textContent = "⏳";
-
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-
-      btnUbicacion.textContent = "📍";
-
-      if (marcadorUsuario) {
-        mapa.removeLayer(marcadorUsuario);
-      }
-
-      const usuarioIcon = L.divIcon({
-        html: `<div style="background:#2980B9; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(0,0,0,0.4);"></div>`,
-        className: '',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
-      });
-
-      marcadorUsuario = L.marker([lat, lng], { icon: usuarioIcon }).addTo(mapa)
-        .bindPopup("<b class='p-2 block text-center text-xs text-pizarra'>¡Estás aquí! 🌲</b>")
-        .openPopup();
-
-      mapa.flyTo([lat, lng], 13, { animate: true, duration: 1.8 });
-    },
-    (error) => {
-      btnUbicacion.textContent = "📍";
-      console.error("Error de GPS: ", error);
-      alert("No se pudo obtener tu ubicación. Asegúrate de activar el GPS y dar permisos a la página.");
-    },
-    { enableHighAccuracy: true, timeout: 7000 }
-  );
 }
