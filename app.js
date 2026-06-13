@@ -1,10 +1,8 @@
 let mapa;
-let marcadorUsuario = null; 
+let marcadorUsuario = null; // Guarda el pin del GPS del usuario
 let aves = [];
 let aveActual = null;
 let modoAdulto = true;
-let fotosActuales = [];
-let fotoIndex = 0;
 let audioObjeto = null;
 let vozActiva = false;
 
@@ -25,22 +23,23 @@ function cargarBaseDeDatos() {
       const txtContador = document.getElementById('contador-aves');
       if (txtContador) txtContador.textContent = `🐦 ${aves.length} aves`;
       
-      // 1. Inicializamos el mapa con la data lista
+      // 1. Inicializamos el mapa con la base de datos lista
       initMapa();
       
-      // 2. Renderizamos el Álbum de colección
+      // 2. Renderizamos el Álbum de colección inferior
       renderizarAlbum(); 
       
-      // 3. Seleccionamos el ave inicial de manera segura esperando un breve respiro del DOM
+      // 3. Seleccionamos la primera ave por defecto al arrancar, asegurando que el DOM exista
       if(aves.length > 0) {
         setTimeout(() => {
           seleccionarAve(aves[0], false);
-        }, 100);
+        }, 50);
       }
     })
     .catch(err => console.error("Error cargando aves.json: ", err));
 }
 
+// Generador de coordenadas fijas distribuidas por zonas geográficas para que se vean todos los pines en Chile
 function obtenerCoordenadasPorZona(ave) {
   if (ave.coordenadasEjemplo) return ave.coordenadasEjemplo;
   
@@ -57,7 +56,7 @@ function obtenerCoordenadasPorZona(ave) {
   } else if (zona.includes("juan fernández") || zona.includes("robinson crusoe")) {
     lat = -33.6350;
     lng = -78.8319 + (ave.id * 0.01);
-  } else { 
+  } else { // Centro / Todo Chile
     lat = -31.5 - (ave.id * 0.18);
     lng = -70.8 - ((ave.id % 3) * 0.08);
   }
@@ -70,17 +69,16 @@ function initMapa() {
   }
 
   const mapContainer = document.getElementById('map');
-  if (!mapContainer) {
-    console.error("Error: No se encontró el contenedor div id='map' en el HTML.");
-    return;
-  }
+  if (!mapContainer) return;
 
+  // Vista inicial centrada en el corazón de Chile
   mapa = L.map('map').setView([-35.0000, -71.5000], 5);
   
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
   }).addTo(mapa);
 
+  // Dibujamos cada pin en el mapa de forma inmediata
   aves.forEach(ave => {
     ave.coordenadasEjemplo = obtenerCoordenadasPorZona(ave);
     const colorPin = ave.pinColor || '#1E8449'; 
@@ -110,7 +108,7 @@ function seleccionarAve(ave, moverMapa = true) {
   if (!ave) return;
   aveActual = ave;
   
-  // Inyección Segura - Adultos (Comprueba si el elemento existe antes de alterarlo)
+  // === INYECCIÓN DE DATOS - MODO ADULTO ===
   const elAdultoEmoji = document.getElementById('adulto-emoji');
   const elAdultoNombre = document.getElementById('adulto-nombre');
   const elAdultoCientifico = document.getElementById('adulto-cientifico');
@@ -118,21 +116,21 @@ function seleccionarAve(ave, moverMapa = true) {
   const elAdultoConservacion = document.getElementById('adulto-conservacion');
 
   if (elAdultoEmoji) elAdultoEmoji.textContent = ave.emoji;
-  if (elAdultoNombre) elAdultoNombre.textContent = ave.nombreComun;
+  if (elAdultoNombre) elAdultoNombre.textContent = ave.nombreComun || ave.nombre;
   if (elAdultoCientifico) elAdultoCientifico.textContent = ave.nombreCientifico;
-  if (elAdultoHabitat) elAdultoHabitat.textContent = ave.habitat;
-  if (elAdultoConservacion) elAdultoConservacion.textContent = ave.conservacion;
+  if (elAdultoHabitat) elAdultoHabitat.textContent = ave.habitat || "No especificado";
+  if (elAdultoConservacion) elAdultoConservacion.textContent = ave.conservacion || "No evaluado";
 
-  // Inyección Segura - Niños
+  // === INYECCIÓN DE DATOS - MODO NIÑO ===
   const elNinoEmoji = document.getElementById('nino-emoji');
   const elNinoNombre = document.getElementById('nino-nombre');
   const elNinoSuperpoder = document.getElementById('nino-superpoder');
 
   if (elNinoEmoji) elNinoEmoji.textContent = ave.emoji;
-  if (elNinoNombre) elNinoNombre.textContent = ave.nombreComun;
-  if (elNinoSuperpoder) elNinoSuperpoder.textContent = ave.superpoder;
+  if (elNinoNombre) elNinoNombre.textContent = ave.nombreComun || ave.nombre;
+  if (elNinoSuperpoder) elNinoSuperpoder.textContent = ave.superpoder || "¡Ser un ave genial! ✨";
 
-  // Limpieza de audio y síntesis de voz en curso
+  // Control e interrupción de audios anteriores para evitar solapamientos
   if(audioObjeto) { audioObjeto.pause(); audioObjeto = null; }
   const btnAudioA = document.getElementById('btn-audio-a');
   if (btnAudioA) btnAudioA.textContent = "🔊 Escuchar Canto";
@@ -142,81 +140,13 @@ function seleccionarAve(ave, moverMapa = true) {
   const btnVozNino = document.getElementById('btn-voz-nino');
   if (btnVozNino) btnVozNino.textContent = "🐦 ¡Háblame!";
 
-  // Control del Mapa
+  // Animación suave de vuelo del mapa si se clickea un pin o el álbum
   if (moverMapa && mapa && ave.coordenadasEjemplo) {
     mapa.flyTo(ave.coordenadasEjemplo, 7, {
       animate: true,
       duration: 1.2 
     });
   }
-
-  // Carga de fotografías desde la API
-  obtenerFotosINaturalist(ave.nombreCientifico);
-}
-
-function obtenerFotosINaturalist(nombreCientifico) {
-  const contenedorAdulto = document.getElementById('car-adulto');
-  const contenedorNino = document.getElementById('car-nino');
-  
-  if (contenedorAdulto) contenedorAdulto.innerHTML = `<div class="text-white text-xs p-4 h-full flex items-center justify-center">🔍 Buscando fotos reales...</div>`;
-  if (contenedorNino) contenedorNino.innerHTML = `<div class="text-pizarra text-xs p-4 h-full flex items-center justify-center">🎨 Buscando fotitos...</div>`;
-
-  fetch(`https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(nombreCientifico)}&per_page=1`)
-    .then(res => res.json())
-    .then(data => {
-      if(data.results && data.results.length > 0 && data.results[0].taxon_photos && data.results[0].taxon_photos.length > 0) {
-        fotosActuales = data.results[0].taxon_photos.slice(0, 3).map(p => {
-          let urlFoto = p.photo.url;
-          return urlFoto ? urlFoto.replace("square", "medium") : "https://images.unsplash.com/photo-1484557052118-f32bd25b45b5?w=500";
-        });
-      } else {
-        fotosActuales = ["https://images.unsplash.com/photo-1484557052118-f32bd25b45b5?w=500"];
-      }
-      fotoIndex = 0;
-      dibujarCarrusel();
-    })
-    .catch(err => {
-      console.error("Error conectando con iNaturalist: ", err);
-      fotosActuales = ["https://images.unsplash.com/photo-1484557052118-f32bd25b45b5?w=500"];
-      fotoIndex = 0;
-      dibujarCarrusel();
-    });
-}
-
-function dibujarCarrusel() {
-  const contA = document.getElementById('car-adulto');
-  const contN = document.getElementById('car-nino');
-  const dotsA = document.getElementById('car-dots-adulto');
-  const dotsN = document.getElementById('car-dots-nino');
-
-  if(contA) contA.innerHTML = ""; 
-  if(contN) contN.innerHTML = "";
-  if(dotsA) dotsA.innerHTML = ""; 
-  if(dotsN) dotsN.innerHTML = "";
-
-  fotosActuales.forEach((url, index) => {
-    const claseActiva = index === fotoIndex ? 'activo' : '';
-    
-    if(contA) contA.innerHTML += `<div class="car-slide ${claseActiva}"><img src="${url}" alt="Foto"></div>`;
-    if(contN) contN.innerHTML += `<div class="car-slide ${claseActiva}"><img src="${url}" alt="Foto"></div>`;
-
-    const dotHtml = `<div class="car-dot ${index === fotoIndex ? 'activo' : ''}" onclick="irAFoto(${index})"></div>`;
-    if(dotsA) dotsA.innerHTML += dotHtml;
-    if(dotsN) dotsN.innerHTML += dotHtml;
-  });
-}
-
-function carMover(direccion) {
-  if (fotosActuales.length === 0) return;
-  fotoIndex += direccion;
-  if (fotoIndex >= fotosActuales.length) fotoIndex = 0;
-  if (fotoIndex < 0) fotoIndex = fotosActuales.length - 1;
-  dibujarCarrusel();
-}
-
-function irAFoto(index) {
-  fotoIndex = index;
-  dibujarCarrusel();
 }
 
 function renderizarAlbum() {
@@ -233,7 +163,7 @@ function renderizarAlbum() {
       <div class="border border-gray-100 p-3 rounded-xl text-center bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors" 
            onclick="event.stopPropagation(); seleccionarAvePorId(${ave.id})">
         <div class="text-3xl mb-1">${ave.emoji}</div>
-        <div class="font-black text-sm text-pizarra">${ave.nombreComun}</div>
+        <div class="font-black text-sm text-pizarra">${ave.nombreComun || ave.nombre}</div>
         <div class="text-xs text-pizarra/50 italic">${ave.nombreCientifico}</div>
       </div>
     `;
@@ -284,7 +214,7 @@ function toggleModo() {
 
 function toggleAudio() {
   if(!aveActual || !aveActual.sonidoUrl) {
-    alert("Canto no disponible para esta especie actualmente.");
+    alert("El canto real en audio no está configurado para esta especie.");
     return;
   }
   const btn = document.getElementById('btn-audio-a');
@@ -315,7 +245,7 @@ function toggleVoz() {
     if(btn) btn.textContent = "🐦 ¡Háblame!";
   } else {
     const textoInformativo = aveActual.datoCurioso || "¡Soy un ave fantástica de Chile!";
-    const texto = `¡Hola! Soy el ${aveActual.nombreComun}. ${textoInformativo} ¡Mi superpoder es: ${aveActual.superpoder}!`;
+    const texto = `¡Hola! Soy el ${aveActual.nombreComun || aveActual.nombre}. ${textoInformativo} ¡Mi superpoder es: ${aveActual.superpoder}!`;
     
     const ut = new SpeechSynthesisUtterance(texto);
     ut.lang = 'es-CL';
