@@ -1,6 +1,3 @@
-// ==========================================
-// CONFIGURACIÓN GLOBAL Y ESTADO DE LA APP
-// ==========================================
 let mapa;
 let marcadorUsuario = null; // Guarda el pin del GPS del usuario
 let aves = [];
@@ -19,53 +16,30 @@ document.addEventListener("DOMContentLoaded", () => {
   cargarBaseDeDatos();
 });
 
-// MODIFICACIÓN CRÍTICA: Forzar la lectura y limpiar caché local vieja
+// EVITA LA CACHÉ: Añade un número único de tiempo para obligar al navegador a leer el aves.json real de 50 aves
 function cargarBaseDeDatos() {
-  fetch('aves.json')
+  fetch(`aves.json?t=${new Date().getTime()}`)
     .then(response => {
-      if (!response.ok) throw new Error("Error al leer el archivo aves.json");
+      if (!response.ok) throw new Error("Error al cargar aves.json");
       return response.json();
     })
     .then(data => {
-      // Guardamos la lista real del JSON de manera global
       aves = data;
       
-      // LÓGICA DE CONTROL: Guardamos y validamos en localStorage para evitar que el navegador use datos viejos
-      const avesEnMemoria = localStorage.getItem('aves_chile_data');
-      if (avesEnMemoria) {
-        const memoriaParseada = JSON.parse(avesEnMemoria);
-        // Si los datos guardados en el navegador difieren en tamaño (ej. tenías 10 y ahora hay 50)
-        if (memoriaParseada.length !== aves.length) {
-          console.log(`[Base de Datos] Actualizando caché vieja de ${memoriaParseada.length} a ${aves.length} aves.`);
-          localStorage.setItem('aves_chile_data', JSON.stringify(aves));
-        }
-      } else {
-        localStorage.setItem('aves_chile_data', JSON.stringify(aves));
+      // Actualizar el contador en la interfaz
+      const txtContador = document.getElementById('contador-aves');
+      if (txtContador) {
+        txtContador.textContent = `🐦 ${aves.length} aves`;
       }
-
-      // Actualizar contador en la interfaz de usuario
-      document.getElementById('contador-aves').textContent = `🐦 ${aves.length} aves`;
       
-      // Inicializar el mapa y los componentes visuales
       initMapa();
       renderizarAlbum(); 
       
       if(aves.length > 0) {
-        seleccionarAve(aves[0], false); // Iniciamos sin mover el mapa al arrancar
+        seleccionarAve(aves[0], false); // Carga inicial sin mover bruscamente el mapa
       }
     })
-    .catch(err => {
-      console.error("Error cargando aves.json: ", err);
-      // Respaldo de emergencia por si el JSON falla temporalmente
-      const respaldo = localStorage.getItem('aves_chile_data');
-      if (respaldo) {
-        aves = JSON.parse(respaldo);
-        document.getElementById('contador-aves').textContent = `🐦 ${aves.length} aves`;
-        initMapa();
-        renderizarAlbum();
-        if(aves.length > 0) seleccionarAve(aves[0], false);
-      }
-    });
+    .catch(err => console.error("Error cargando aves.json: ", err));
 }
 
 function initMapa() {
@@ -78,7 +52,7 @@ function initMapa() {
   aves.forEach(ave => {
     const pinHtml = `
       <div class="ave-pin" style="background:${ave.pinColor || '#1E8449'};">
-        <span class="ave-pin-emoji">${ave.emoji}</span>
+        <span class="ave-pin-emoji">${ave.emoji || '🐦'}</span>
       </div>
     `;
     
@@ -89,71 +63,84 @@ function initMapa() {
       iconAnchor: [19, 38]
     });
 
-    const marker = L.marker(ave.coordenadasEjemplo, { icon: customIcon }).addTo(mapa);
+    const coords = ave.coordenadasEjemplo || [-33.4489, -70.6693];
+    const marker = L.marker(coords, { icon: customIcon }).addTo(mapa);
     
     marker.on('click', () => {
-      seleccionarAve(ave, true); // Al hacer clic en el mapa, centramos suavemente
+      seleccionarAve(ave, true);
     });
   });
 }
 
-// moverMapa es un interruptor. Si es true, el mapa "vuela" hacia el ave.
 function seleccionarAve(ave, moverMapa = true) {
   aveActual = ave;
   
-  // Elementos Adulto
-  document.getElementById('adulto-emoji').textContent = ave.emoji;
-  document.getElementById('adulto-nombre').textContent = ave.nombreComun;
-  document.getElementById('adulto-cientifico').textContent = ave.nombreCientifico;
-  document.getElementById('adulto-habitat').textContent = ave.datosAdulto?.habitat || 'Sin datos';
-  document.getElementById('adulto-conservacion').textContent = ave.datosAdulto?.estadoConservacion || 'Sin datos';
+  // PARTE DE ADULTO: Estructura original intacta (Hábitat, Conservación y Avistamientos)
+  document.getElementById('adulto-emoji').textContent = ave.emoji || '🐦';
+  document.getElementById('adulto-nombre').textContent = ave.nombreComun || ave.nombre;
+  document.getElementById('adulto-cientifico').textContent = ave.nombreCientifico || '';
+  
+  // Mantiene tus llamados exactos de la propiedad original datosAdulto
+  document.getElementById('adulto-habitat').textContent = ave.datosAdulto?.habitat || ave.habitat || 'Sin datos';
+  document.getElementById('adulto-conservacion').textContent = ave.datosAdulto?.estadoConservacion || ave.conservacion || 'Sin datos';
 
-  // Elementos Niño
-  document.getElementById('nino-emoji').textContent = ave.emoji;
-  document.getElementById('nino-nombre').textContent = ave.nombreComun;
-  document.getElementById('nino-superpoder').textContent = ave.datosNino?.superpoder || '¡Descubriendo!';
+  // PARTE DE NIÑO: Adaptable a ambos formatos de propiedad por seguridad
+  document.getElementById('nino-emoji').textContent = ave.emoji || '🐦';
+  document.getElementById('nino-nombre').textContent = ave.nombreComun || ave.nombre;
+  document.getElementById('nino-superpoder').textContent = ave.datosNino?.superpoder || ave.superpoder || '¡Puede volar muy alto!';
 
-  // Reseteo de sonidos y voces activas
+  // Limpieza de hilos de reproducción de audios y textos previos
   if(audioObjeto) { audioObjeto.pause(); audioObjeto = null; }
   document.getElementById('btn-audio-a').textContent = "🔊 Escuchar Canto";
   window.speechSynthesis?.cancel();
   vozActiva = false;
   document.getElementById('btn-voz-nino').textContent = "🐦 ¡Háblame!";
 
-  // Efecto de auto-zoom y vuelo dinámico en el mapa
-  if (moverMapa && mapa) {
+  if (moverMapa && mapa && ave.coordenadasEjemplo) {
     mapa.flyTo(ave.coordenadasEjemplo, 9, {
       animate: true,
-      duration: 1.5 // Duración del vuelo en segundos
+      duration: 1.5
     });
   }
 
+  // Búsqueda dinámica de imágenes en la API de iNaturalist usando el nombre científico
   obtenerFotosINaturalist(ave.nombreCientifico);
 }
 
+// CONEXIÓN DIRECTA CON LA API DE INATURALIST
 function obtenerFotosINaturalist(nombreCientifico) {
   const contenedorAdulto = document.getElementById('car-adulto');
   const contenedorNino = document.getElementById('car-nino');
   
-  if (contenedorAdulto) contenedorAdulto.innerHTML = `<div class="text-white text-xs p-4">Buscando fotos...</div>`;
-  if (contenedorNino) contenedorNino.innerHTML = `<div class="text-pizarra text-xs p-4">Buscando fotos...</div>`;
+  if (contenedorAdulto) contenedorAdulto.innerHTML = `<div class="text-white text-xs p-4 text-center">Buscando fotos reales...</div>`;
+  if (contenedorNino) contenedorNino.innerHTML = `<div class="text-pizarra text-xs p-4 text-center">Buscando fotos reales...</div>`;
+
+  if (!nombreCientifico) {
+    ponerImagenPorDefecto();
+    return;
+  }
 
   fetch(`https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(nombreCientifico)}&per_page=1`)
     .then(res => res.json())
     .then(data => {
-      if(data.results && data.results.length > 0 && data.results[0].taxon_photos) {
+      if(data.results && data.results.length > 0 && data.results[0].taxon_photos && data.results[0].taxon_photos.length > 0) {
+        // Obtenemos hasta un máximo de 5 fotos de la comunidad de iNaturalist
         fotosActuales = data.results[0].taxon_photos.slice(0, 5).map(p => p.photo.medium_url);
       } else {
-        fotosActuales = ["https://images.unsplash.com/photo-1484557052118-f32bd25b45b5?w=500"];
+        ponerImagenPorDefecto();
       }
       fotoIndex = 0;
       dibujarCarrusel();
     })
     .catch(() => {
-      fotosActuales = ["https://images.unsplash.com/photo-1484557052118-f32bd25b45b5?w=500"];
-      fotoIndex = 0;
-      dibujarCarrusel();
+      ponerImagenPorDefecto();
     });
+}
+
+function ponerImagenPorDefecto() {
+  fotosActuales = ["https://images.unsplash.com/photo-1484557052118-f32bd25b45b5?w=500"];
+  fotoIndex = 0;
+  dibujarCarrusel();
 }
 
 function dibujarCarrusel() {
@@ -165,12 +152,13 @@ function dibujarCarrusel() {
   if(!contA || !contN) return;
 
   contA.innerHTML = ""; contN.innerHTML = "";
-  dotsA.innerHTML = ""; dotsN.innerHTML = "";
+  if (dotsA) dotsA.innerHTML = "";
+  if (dotsN) dotsN.innerHTML = "";
 
   fotosActuales.forEach((url, index) => {
     const claseActiva = index === fotoIndex ? 'activo' : '';
-    contA.innerHTML += `<div class="car-slide ${claseActiva}"><img src="${url}" alt="foto"></div>`;
-    contN.innerHTML += `<div class="car-slide ${claseActiva}"><img src="${url}" alt="foto"></div>`;
+    contA.innerHTML += `<div class="car-slide ${claseActiva}"><img src="${url}" alt="Foto Ave"></div>`;
+    contN.innerHTML += `<div class="car-slide ${claseActiva}"><img src="${url}" alt="Foto Ave"></div>`;
 
     const dotActivo = index === fotoIndex ? 'activo' : '';
     if(dotsA) dotsA.innerHTML += `<div class="car-dot ${dotActivo}" onclick="irAFoto(${index})"></div>`;
@@ -201,20 +189,25 @@ function renderizarAlbum() {
   const avesPagina = aves.slice(inicio, fin);
 
   avesPagina.forEach(ave => {
+    const nombre = ave.nombreComun || ave.nombre || "Ave";
     grid.innerHTML += `
       <div class="border border-gray-100 p-3 rounded-xl text-center bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors" 
            onclick="event.stopPropagation(); seleccionarAvePorId('${ave.id}')">
-        <div class="text-3xl mb-1">${ave.emoji}</div>
-        <div class="font-black text-sm text-pizarra">${ave.nombreComun}</div>
-        <div class="text-xs text-pizarra/50 italic">${ave.nombreCientifico}</div>
+        <div class="text-3xl mb-1">${ave.emoji || '🐦'}</div>
+        <div class="font-black text-sm text-pizarra leading-tight">${nombre}</div>
+        <div class="text-xs text-pizarra/50 italic">${ave.nombreCientifico || ''}</div>
       </div>
     `;
   });
 
   const totalPaginas = Math.ceil(aves.length / avesPorPagina) || 1;
-  document.getElementById('txt-paginacion').textContent = `Página ${paginaActualAlbum} de ${totalPaginas}`;
-  document.getElementById('btn-pag-ant').disabled = paginaActualAlbum === 1;
-  document.getElementById('btn-pag-sig').disabled = paginaActualAlbum === totalPaginas;
+  const txtPag = document.getElementById('txt-paginacion');
+  if (txtPag) txtPag.textContent = `Página ${paginaActualAlbum} de ${totalPaginas}`;
+  
+  const btnAnt = document.getElementById('btn-pag-ant');
+  const btnSig = document.getElementById('btn-pag-sig');
+  if (btnAnt) btnAnt.disabled = paginaActualAlbum === 1;
+  if (btnSig) btnSig.disabled = paginaActualAlbum === totalPaginas;
 }
 
 function cambiarPaginaAlbum(direccion) {
@@ -223,10 +216,9 @@ function cambiarPaginaAlbum(direccion) {
 }
 
 function seleccionarAvePorId(id) {
-  // Aseguramos la búsqueda comparando strings o enteros de forma flexible
   const encontrado = aves.find(a => String(a.id) === String(id));
   if(encontrado) {
-    seleccionarAve(encontrado, true); // Activa el vuelo del mapa hacia el ave seleccionada
+    seleccionarAve(encontrado, true);
     document.getElementById('app-header').scrollIntoView({ behavior: 'smooth' });
   }
 }
@@ -278,8 +270,9 @@ function toggleVoz() {
     vozActiva = false;
     btn.textContent = "🐦 ¡Háblame!";
   } else {
-    const frase = aveActual.fraseNino || `Hola, soy el ${aveActual.nombreComun}`;
-    const superpoder = aveActual.datosNino?.superpoder || 'volar muy alto';
+    const nombre = aveActual.nombreComun || aveActual.nombre || "Ave";
+    const frase = aveActual.fraseNino || `Hola, soy el ${nombre}`;
+    const superpoder = aveActual.datosNino?.superpoder || aveActual.superpoder || 'volar muy alto';
     const texto = `${frase}. ¡Mi superpoder es: ${superpoder}!`;
     
     const ut = new SpeechSynthesisUtterance(texto);
@@ -294,7 +287,6 @@ function toggleVoz() {
   }
 }
 
-// Geolocalización GPS Real por Navegador
 function centrarMiUbicacion() {
   if (!navigator.geolocation) {
     alert("Tu navegador o teléfono no soporta la geolocalización.");
@@ -331,7 +323,7 @@ function centrarMiUbicacion() {
     (error) => {
       btnUbicacion.textContent = "📍";
       console.error("Error de GPS: ", error);
-      alert("No se pudo obtener tu ubicación. Asegúrate de activar el GPS y dar permisos a la página.");
+      alert("No se pudo obtener tu ubicación. Asegúrate de activar el GPS.");
     },
     { enableHighAccuracy: true, timeout: 7000 }
   );
