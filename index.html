@@ -595,32 +595,39 @@
 // ══════════════════════════════════════════════
 // BASE DE DATOS AVES
 // ══════════════════════════════════════════════
-// Variable global para almacenar las aves
+// Variable global que recibirá los datos del JSON
 let aves = [];
+let aveActual = null; // Inicializamos aveActual para evitar errores
 
-// Función para cargar los datos desde el archivo aves.json
-function cargarBaseDeDatos() {
-  // Añadimos ?t=${new Date().getTime()} para evitar que el navegador guarde en caché una versión antigua
-  fetch('aves.json?t=' + new Date().getTime())
-    .then(response => {
-      if (!response.ok) throw new Error("No se pudo cargar el archivo aves.json");
-      return response.json();
-    })
-    .then(data => {
-      aves = data;
-      console.log("¡Éxito! Aves cargadas:", aves.length);
-      
-      // Actualizar la interfaz visualmente
-      document.getElementById('contador-aves').textContent = `🐦 ${aves.length} aves`;
-      
-      // Inicializar el resto de la app
-      initMapa();
-      renderizarAlbum(); 
-    })
-    .catch(err => {
-      console.error("Error al cargar las aves:", err);
-    });
+// FUNCIÓN CORREGIDA: Carga dinámica desde aves.json
+async function cargarBaseDeDatos() {
+  try {
+    // El "?nocache=" asegura que Vercel y el navegador descarguen el archivo nuevo siempre
+    const respuesta = await fetch('aves.json?nocache=' + new Date().getTime());
+    if (!respuesta.ok) throw new Error("No se pudo cargar aves.json");
+    
+    aves = await respuesta.json();
+    console.log("Datos cargados correctamente. Total aves:", aves.length);
+    
+    // Si hay aves, definimos la primera como ave actual
+    if (aves.length > 0) {
+      aveActual = aves[0];
+    }
+    
+    // Inicializamos el resto de la app una vez que 'aves' tiene los 50 datos
+    initMapa();
+    actualizarTarjeta(aveActual);
+    
+  } catch (error) {
+    console.error("Error al cargar la base de datos:", error);
+    alert("Hubo un error cargando las 50 aves. Revisa la consola (F12).");
+  }
 }
+
+// Reemplazamos la inicialización original:
+document.addEventListener('DOMContentLoaded', () => {
+  cargarBaseDeDatos();
+});
 
 // Iniciar la carga al abrir la página
 document.addEventListener('DOMContentLoaded', () => {
