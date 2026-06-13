@@ -1,14 +1,16 @@
 let mapa;
-let marcadorUsuario = null; // Guarda el pin del GPS del usuario
+let marcadorUsuario = null; 
 let aves = [];
 let aveActual = null;
 let modoAdulto = true;
 let audioObjeto = null;
 let vozActiva = false;
 
-// Variables globales de paginación para el Álbum
+// VARIABLES DEL ÁLBUM Y GAMIFICACIÓN
 let paginaActualAlbum = 1;
 const avesPorPagina = 10;
+// Cargamos las aves desbloqueadas desde el almacenamiento local del navegador
+let avesDesbloqueadas = JSON.parse(localStorage.getItem('avesDesbloqueadas')) || [];
 
 document.addEventListener("DOMContentLoaded", () => {
   cargarBaseDeDatos();
@@ -23,13 +25,12 @@ function cargarBaseDeDatos() {
       const txtContador = document.getElementById('contador-aves');
       if (txtContador) txtContador.textContent = `🐦 ${aves.length} aves`;
       
-      // 1. Inicializamos el mapa con la base de datos lista
+      // Inicializaciones principales
       initMapa();
-      
-      // 2. Renderizamos el Álbum de colección inferior
+      actualizarProgresoYMedallas(); // Calcula barra y medalla antes de renderizar
       renderizarAlbum(); 
       
-      // 3. Seleccionamos la primera ave por defecto al arrancar, asegurando que el DOM exista
+      // Seleccionamos la primera ave por defecto asegurando que el DOM esté listo
       if(aves.length > 0) {
         setTimeout(() => {
           seleccionarAve(aves[0], false);
@@ -39,7 +40,7 @@ function cargarBaseDeDatos() {
     .catch(err => console.error("Error cargando aves.json: ", err));
 }
 
-// Generador de coordenadas fijas distribuidas por zonas geográficas para que se vean todos los pines en Chile
+// Distribución de coordenadas por zonas geográficas de Chile
 function obtenerCoordenadasPorZona(ave) {
   if (ave.coordenadasEjemplo) return ave.coordenadasEjemplo;
   
@@ -56,7 +57,7 @@ function obtenerCoordenadasPorZona(ave) {
   } else if (zona.includes("juan fernández") || zona.includes("robinson crusoe")) {
     lat = -33.6350;
     lng = -78.8319 + (ave.id * 0.01);
-  } else { // Centro / Todo Chile
+  } else { 
     lat = -31.5 - (ave.id * 0.18);
     lng = -70.8 - ((ave.id % 3) * 0.08);
   }
@@ -71,14 +72,12 @@ function initMapa() {
   const mapContainer = document.getElementById('map');
   if (!mapContainer) return;
 
-  // Vista inicial centrada en el corazón de Chile
   mapa = L.map('map').setView([-35.0000, -71.5000], 5);
   
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
   }).addTo(mapa);
 
-  // Dibujamos cada pin en el mapa de forma inmediata
   aves.forEach(ave => {
     ave.coordenadasEjemplo = obtenerCoordenadasPorZona(ave);
     const colorPin = ave.pinColor || '#1E8449'; 
@@ -99,6 +98,8 @@ function initMapa() {
     const marker = L.marker(ave.coordenadasEjemplo, { icon: customIcon }).addTo(mapa);
     
     marker.on('click', () => {
+      // Al pulsar sobre el pin en el mapa, automáticamente la desbloqueamos
+      desbloquearAve(ave.id);
       seleccionarAve(ave, true); 
     });
   });
@@ -111,13 +112,13 @@ function seleccionarAve(ave, moverMapa = true) {
   // === INYECCIÓN DE DATOS - MODO ADULTO ===
   const elAdultoEmoji = document.getElementById('adulto-emoji');
   const elAdultoNombre = document.getElementById('adulto-nombre');
-  const elAdultoCientifico = document.getElementById('adulto-cientifico');
+  const elAdultoLine = document.getElementById('adulto-cientifico');
   const elAdultoHabitat = document.getElementById('adulto-habitat');
   const elAdultoConservacion = document.getElementById('adulto-conservacion');
 
   if (elAdultoEmoji) elAdultoEmoji.textContent = ave.emoji;
   if (elAdultoNombre) elAdultoNombre.textContent = ave.nombreComun || ave.nombre;
-  if (elAdultoCientifico) elAdultoCientifico.textContent = ave.nombreCientifico;
+  if (elAdultoLine) elAdultoLine.textContent = ave.nombreCientifico;
   if (elAdultoHabitat) elAdultoHabitat.textContent = ave.habitat || "No especificado";
   if (elAdultoConservacion) elAdultoConservacion.textContent = ave.conservacion || "No evaluado";
 
@@ -130,7 +131,7 @@ function seleccionarAve(ave, moverMapa = true) {
   if (elNinoNombre) elNinoNombre.textContent = ave.nombreComun || ave.nombre;
   if (elNinoSuperpoder) elNinoSuperpoder.textContent = ave.superpoder || "¡Ser un ave genial! ✨";
 
-  // Control e interrupción de audios anteriores para evitar solapamientos
+  // Control e interrupción de audios anteriores
   if(audioObjeto) { audioObjeto.pause(); audioObjeto = null; }
   const btnAudioA = document.getElementById('btn-audio-a');
   if (btnAudioA) btnAudioA.textContent = "🔊 Escuchar Canto";
@@ -140,15 +141,74 @@ function seleccionarAve(ave, moverMapa = true) {
   const btnVozNino = document.getElementById('btn-voz-nino');
   if (btnVozNino) btnVozNino.textContent = "🐦 ¡Háblame!";
 
-  // Animación suave de vuelo del mapa si se clickea un pin o el álbum
   if (moverMapa && mapa && ave.coordenadasEjemplo) {
-    mapa.flyTo(ave.coordenadasEjemplo, 7, {
-      animate: true,
-      duration: 1.2 
-    });
+    mapa.flyTo(ave.coordenadasEjemplo, 7, { animate: true, duration: 1.2 });
   }
 }
 
+// LÓGICA DE JUEGO: DESBLOQUEAR AVES Y CONTROLAR LOCALSTORAGE
+function desbloquearAve(id) {
+  const aveId = Number(id);
+  if (!avesDesbloqueadas.includes(aveId)) {
+    avesDesbloqueadas.push(aveId);
+    localStorage.setItem('avesDesbloqueadas', JSON.stringify(avesDesbloqueadas));
+    
+    // Actualizamos la interfaz al vuelo
+    actualizarProgresoYMedallas();
+    renderizarAlbum();
+  }
+}
+
+function actualizarProgresoYMedallas() {
+  if (aves.length === 0) return;
+  
+  // Calcular porcentaje de colección
+  const totalAves = aves.length;
+  const totalDesbloqueadas = avesDesbloqueadas.length;
+  const porcentaje = Math.round((totalDesbloqueadas / totalAves) * 100);
+
+  // Inyectar dinámicamente o actualizar la Barra de Progreso si existe un contenedor
+  // Si no existe en el index básico, lo inyectamos de manera flotante o sobre el álbum.
+  let contenedorProgreso = document.getElementById('progreso-coleccion');
+  
+  if (!contenedorProgreso) {
+    // Si tu index.html no tiene la barra maquetada, la creamos dinámicamente arriba del álbum
+    const albumGrid = document.getElementById('album-grid');
+    if (albumGrid && albumGrid.parentNode) {
+      const wrapper = document.createElement('div');
+      wrapper.id = 'progreso-wrapper';
+      wrapper.className = 'mb-4 bg-gray-50 border border-gray-100 p-4 rounded-xl flex flex-col gap-2';
+      wrapper.innerHTML = `
+        <div class="flex items-center justify-between font-black text-xs text-pizarra tracking-wider uppercase">
+          <span id="txt-progreso-conteo">🏆 Descubiertas: 0 / 0</span>
+          <span id="txt-medalla-rango" class="text-lg">🥚 Huevo</span>
+        </div>
+        <div class="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
+          <div id="barra-progreso-llenado" class="bg-gradient-to-r from-bosque to-hoja h-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+      `;
+      albumGrid.parentNode.insertBefore(wrapper, albumGrid);
+    }
+  }
+
+  // Determinar Rango y Medalla según porcentaje de éxito
+  let medalla = "🥚 Explorador Principiante (Huevo)";
+  if (porcentaje >= 25 && porcentaje < 50) medalla = "🐥 Observador Junior (Pichón)";
+  if (porcentaje >= 50 && porcentaje < 75) medalla = "🦅 Guardián del Aire (Halcón)";
+  if (porcentaje >= 75 && porcentaje < 100) medalla = "🦉 Sabio de la Naturaleza (Búho)";
+  if (porcentaje === 100) medalla = "👑 ¡Gran Cóndor Supremo de Chile! 🇨🇱";
+
+  // Actualizar los elementos visuales de progreso
+  const elConteo = document.getElementById('txt-progreso-conteo');
+  const elMedalla = document.getElementById('txt-medalla-rango');
+  const elBarra = document.getElementById('barra-progreso-llenado');
+
+  if (elConteo) elConteo.textContent = `🏆 Descubiertas: ${totalDesbloqueadas} / ${totalAves} (${porcentaje}%)`;
+  if (elMedalla) elMedalla.textContent = medalla;
+  if (elBarra) elBarra.style.width = `${porcentaje}%`;
+}
+
+// RENDERIZAR EL ÁLBUM MOSTRANDO CANDADOS Y ESTADOS DE DESBLOQUEO
 function renderizarAlbum() {
   const grid = document.getElementById('album-grid');
   if(!grid) return;
@@ -159,14 +219,30 @@ function renderizarAlbum() {
   const avesPagina = aves.slice(inicio, fin);
 
   avesPagina.forEach(ave => {
-    grid.innerHTML += `
-      <div class="border border-gray-100 p-3 rounded-xl text-center bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors" 
-           onclick="event.stopPropagation(); seleccionarAvePorId(${ave.id})">
-        <div class="text-3xl mb-1">${ave.emoji}</div>
-        <div class="font-black text-sm text-pizarra">${ave.nombreComun || ave.nombre}</div>
-        <div class="text-xs text-pizarra/50 italic">${ave.nombreCientifico}</div>
-      </div>
-    `;
+    const estaDesbloqueada = avesDesbloqueadas.includes(Number(ave.id));
+    
+    if (estaDesbloqueada) {
+      // Tarjeta Normal a Color para el Ave Desbloqueada
+      grid.innerHTML += `
+        <div class="border-2 border-hoja/30 p-3 rounded-xl text-center bg-white shadow-sm hover:shadow hover:bg-gray-50 cursor-pointer transition-all" 
+             onclick="event.stopPropagation(); seleccionarAvePorId(${ave.id})">
+          <div class="text-3xl mb-1">${ave.emoji}</div>
+          <div class="font-black text-sm text-pizarra">${ave.nombreComun || ave.nombre}</div>
+          <div class="text-xs text-bosque font-bold uppercase tracking-widest" style="font-size: 9px;">✨ Avistada</div>
+        </div>
+      `;
+    } else {
+      // Tarjeta Oscurecida con Candado para el Ave Bloqueada
+      grid.innerHTML += `
+        <div class="border border-gray-200 p-3 rounded-xl text-center bg-gray-100 opacity-60 filter grayscale cursor-not-allowed select-none transition-all relative group"
+             onclick="event.stopPropagation(); alert('¡Explora el mapa y pulsa su pin para desbloquear esta especie! 🗺️')">
+          <div class="absolute top-2 right-2 text-xs opacity-40">🔒</div>
+          <div class="text-3xl mb-1 filter blur-[1px]">❓</div>
+          <div class="font-bold text-sm text-gray-400 italic">Incógnita</div>
+          <div class="text-pizarra/40 tracking-tighter" style="font-size: 10px;">Zona: ${ave.zona}</div>
+        </div>
+      `;
+    }
   });
 
   const totalPaginas = Math.ceil(aves.length / avesPorPagina) || 1;
