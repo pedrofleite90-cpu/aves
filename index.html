@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Alas de Chile</title>
 
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com\"></script>
 
-  <!-- Leaflet.js -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -22,191 +21,203 @@
             cielo:'#D6EAF8', lago:'#2980B9', bosque:'#1E8449',
             hoja:'#A9DFBF', tierra:'#784212', sol:'#F7DC6F',
             coral:'#E74C3C', niebla:'#F0F4F8', pizarra:'#2C3E50',
-          }
+          },
+          fontFamily: { display:['Nunito','sans-serif'], prose:['Lora','serif'] }
         }
       }
     }
   </script>
 
   <style>
-    * { box-sizing: border-box; }
-    body { font-family:'Nunito',sans-serif; background:#F0F4F8; margin:0; }
-
-    .modo-switch { position:relative; cursor:pointer; user-select:none; }
-    .switch-track { width:56px; height:28px; border-radius:14px; transition:background .3s; }
-    .switch-thumb {
-      position:absolute; top:3px; left:3px; width:22px; height:22px;
-      border-radius:50%; background:white; box-shadow:0 1px 4px rgba(0,0,0,.25);
-      transition:transform .3s cubic-bezier(.34,1.56,.64,1);
-    }
-
-    #map {
-      height:280px; border-radius:16px;
-      box-shadow:0 4px 24px rgba(41,128,185,.18); z-index:0;
-    }
-
-    .ave-pin {
-      width:38px; height:38px; border-radius:50% 50% 50% 0;
-      transform:rotate(-45deg); display:flex; align-items:center; justify-content:center;
-      border:3px solid white; box-shadow:0 3px 10px rgba(0,0,0,.25);
-      cursor:pointer; transition:transform .2s;
-    }
-    .ave-pin:hover { transform:rotate(-45deg) scale(1.15); }
-    .ave-pin-emoji { transform:rotate(45deg); font-size:18px; line-height:1; }
-
-    #btn-ubicacion {
-      position:absolute; bottom:12px; right:12px; z-index:500;
-      width:42px; height:42px; border-radius:50%;
-      background:white; border:none;
-      box-shadow:0 2px 10px rgba(0,0,0,.2);
-      display:flex; align-items:center; justify-content:center;
-      font-size:1.1rem; cursor:pointer;
-    }
-
-    .tarjeta-wrap { transition:opacity .35s ease, transform .35s ease; }
-    .tarjeta-wrap.oculta  { opacity:0; transform:translateY(8px); pointer-events:none; position:absolute; width:100%; }
-    .tarjeta-wrap.visible { opacity:1; transform:translateY(0); }
-    .tab-btn.activa { border-bottom:3px solid #1E8449; color:#1E8449; font-weight:700; }
-    .tab-panel { display:none; }
-    .tab-panel.activo { display:block; }
-    .fondo-nino { background:linear-gradient(135deg,#FFF9E6 0%,#E8F5E9 100%); }
-
-    .car-wrap { position:relative; height:200px; border-radius:14px; overflow:hidden; background:#111827; }
-    .car-slide { position:absolute; inset:0; opacity:0; transition:opacity .5s ease; }
-    .car-slide.activo { opacity:1; }
-    .car-slide img { width:100%; height:100%; object-fit:cover; display:block; }
+    * { box-sizing: border-box; font-family: 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: #F0F4F8; color: #2C3E50; padding-bottom: 40px; }
     
-    .car-arrow {
-      position:absolute; top:50%; transform:translateY(-50%); z-index:5;
-      background:rgba(0,0,0,.45); color:white; border:none; border-radius:50%;
-      width:32px; height:32px; font-size:1rem; cursor:pointer;
-      display:flex; align-items:center; justify-content:center;
+    #map { height: 42vh; width: 100%; border-bottom: 4px solid #A9DFBF; z-index: 10; }
+    
+    .ave-pin {
+      width: 38px; height: 38px; border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg); display: flex; align-items: center;
+      justify-content: center; border: 3px solid white;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .car-prev { left:8px; } .car-next { right:8px; }
-    .car-dots { display:flex; justify-content:center; gap:6px; margin-top:8px; }
-    .car-dot { width:7px; height:7px; border-radius:50%; background:#ccc; cursor:pointer; }
-    .car-dot.activo { background:#1E8449; transform:scale(1.35); }
+    .ave-pin-emoji { transform: rotate(45deg); font-size: 18px; }
+    .ave-pin:hover { transform: rotate(-45deg) scale(1.18); box-shadow: 0 6px 14px rgba(0,0,0,0.35); }
 
-    .btn-audio {
-      width:100%; display:flex; align-items:center; justify-content:center;
-      gap:8px; padding:10px; border-radius:14px; border:none; cursor:pointer;
-      font-weight:900; color:white;
+    .tarjeta-modo { display: none; }
+    .tarjeta-modo.activo { display: block; animation: prender 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
+    
+    @keyframes prender {
+      0% { opacity: 0; transform: translateY(12px) scale(0.98); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
     }
+
+    /* Animaciones de Desbloqueo y Notas */
+    @keyframes estallido {
+      0% { transform: scale(1); filter: brightness(1); }
+      50% { transform: scale(1.05); filter: brightness(1.2); box-shadow: 0 0 20px rgba(247,220,111,0.5); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+    .animar-desbloqueo { animation: estallido 0.5s ease-in-out 2; }
+
+    .nota {
+      position: absolute; font-size: 20px; pointer-events: none;
+      animation: subirNota 1.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      opacity: 0; z-index: 50;
+    }
+    @keyframes subirNota {
+      0% { transform: translateY(0) translateX(0) scale(0.6); opacity: 0; }
+      15% { opacity: 1; transform: translateY(-10px) translateX(5px) scale(1.1); }
+      100% { transform: translateY(-75px) translateX(-15px) scale(0.8); opacity: 0; }
+    }
+
+    .btn-audio.sonando { animation: pulsoAudio 1.5s infinite ease-in-out; }
+    @keyframes pulsoAudio {
+      0%, 100% { box-shadow: 0 4px 6px rgba(0,0,0,0.1); filter: brightness(1); }
+      50% { box-shadow: 0 0 15px rgba(30,132,73,0.4); filter: brightness(1.1); }
+    }
+
+    /* Estilos Toast */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
+      background: rgba(44, 62, 80, 0.95); color: white; padding: 12px 24px;
+      border-radius: 99px; font-weight: 700; font-size: 14px; z-index: 2000;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex; align-items: center; gap: 8px; pointer-events: none;
+    }
+    #toast.ver { transform: translateX(-50%) translateY(0); }
   </style>
 </head>
+<body>
 
-<body class="min-h-screen bg-niebla">
-
-<!-- HEADER -->
-<header id="app-header" class="sticky top-0 z-50 bg-gradient-to-r from-bosque to-lago shadow-md">
-  <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-2">
-      <h1 class="text-white font-black text-xl tracking-tight">Alas de Chile</h1>
-    </div>
-    <button id="btn-modo" onclick="toggleModo()" class="modo-switch flex items-center gap-2 bg-white/20 rounded-2xl px-3 py-2 border border-white/30">
-      <span id="label-modo" class="text-white font-bold text-xs">Adulto 📊</span>
-      <div class="relative">
-        <div id="switch-track" class="switch-track bg-white/40"></div>
-        <div id="switch-thumb" class="switch-thumb"></div>
+  <header id="app-header" class="bg-gradient-to-r from-bosque to-lago p-4 pb-5 text-white shadow-md relative">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-black tracking-tight flex items-center gap-1.5">Alas de Chile <span class="text-xl">🇨🇱</span></h1>
+        <p class="text-xs text-cielo/80 font-bold mt-0.5" id="contador-aves">Cargando bitácora de aves...</p>
       </div>
-    </button>
-  </div>
-</header>
-
-<main class="max-w-md mx-auto px-4 pb-28">
-  <!-- MAPA -->
-  <section class="mt-4">
-    <div class="flex items-center justify-between mb-2">
-      <h2 class="text-pizarra font-bold text-sm uppercase tracking-widest opacity-60">Mapa Explorador</h2>
-      <span id="contador-aves" class="text-xs bg-bosque/10 text-bosque font-semibold px-2 py-0.5 rounded-full">Cargando...</span>
-    </div>
-    <div style="position:relative;">
-      <div id="map"></div>
-      <button id="btn-ubicacion" onclick="centrarMiUbicacion()">📍</button>
-    </div>
-  </section>
-
-  <!-- TARJETA DETALLES -->
-  <section class="mt-6">
-    <div class="relative" style="min-height:340px;">
       
-      <!-- ADULTO -->
-      <div id="tarjeta-adulto" class="tarjeta-wrap visible bg-white rounded-2xl overflow-hidden shadow-sm">
-        <div id="adulto-header" class="bg-gradient-to-r from-bosque to-lago p-4 text-white">
-          <div class="flex items-center gap-3">
-            <div id="adulto-emoji" class="text-4xl">🐦</div>
-            <div>
-              <h3 id="adulto-nombre" class="font-black text-xl">Selecciona un ave</h3>
-              <p id="adulto-cientifico" class="text-white/70 text-xs italic">Haz clic en un pin del mapa</p>
-            </div>
-          </div>
+      <div class="bg-black/10 p-1 rounded-full flex items-center relative cursor-pointer select-none border border-white/10" onclick="toggleModo()" style="width: 72px; height: 36px;">
+        <div id="switch-thumb" class="bg-white w-7 h-7 rounded-full shadow-md flex items-center justify-center transition-transform duration-300 absolute left-1">
+          <span id="switch-emoji" class="text-sm">📊</span>
         </div>
-
-        <div class="px-4 pt-3">
-          <div class="car-wrap">
-            <div id="car-adulto" class="w-full h-full relative"></div>
-            <button class="car-arrow car-prev" onclick="carMover(-1)">‹</button>
-            <button class="car-arrow car-next" onclick="carMover(1)">›</button>
-          </div>
-          <div id="car-dots-adulto" class="car-dots"></div>
-        </div>
-
-        <div class="p-4">
-          <button id="btn-audio-a" class="btn-audio bg-bosque mb-4" onclick="toggleAudio()">🔊 Escuchar Canto</button>
-          <div class="flex border-b border-gray-100 text-xs font-bold text-center mb-3">
-            <button class="tab-btn activa flex-1 py-2" onclick="abrirTab('habitat',this)">Hábitat</button>
-            <button class="tab-btn flex-1 py-2" onclick="abrirTab('conservacion',this)">Conservación</button>
-          </div>
-          <div id="panel-habitat" class="tab-panel activo text-sm text-pizarra/80">
-            <p id="adulto-habitat"></p>
-          </div>
-          <div id="panel-conservacion" class="tab-panel text-sm text-pizarra/80">
-            <p id="adulto-conservacion"></p>
-          </div>
+        <div class="w-full flex justify-between px-2 text-xs font-black text-white/40 pointer-events-none">
+          <span>📊</span>
+          <span>🧸</span>
         </div>
       </div>
+    </div>
 
-      <!-- NIÑO -->
-      <div id="tarjeta-nino" class="tarjeta-wrap oculta bg-white rounded-2xl overflow-hidden shadow-md">
-        <div class="fondo-nino p-5 text-center">
-          <div id="nino-emoji" class="text-6xl mb-2">🐦</div>
-          <h3 id="nino-nombre" class="font-black text-2xl text-bosque">¡Haz clic en un ave!</h3>
-          <p id="nino-subtitulo" class="text-sm text-bosque/70 font-bold">¡Y descubre sus secretos!</p>
-        </div>
-        <div class="px-4 pt-2">
-          <div class="car-wrap">
-            <div id="car-nino" class="w-full h-full relative"></div>
-            <button class="car-arrow car-prev" onclick="carMover(-1)">‹</button>
-            <button class="car-arrow car-next" onclick="carMover(1)">›</button>
-          </div>
-          <div id="car-dots-nino" class="car-dots"></div>
-        </div>
-        <div class="p-4">
-          <button id="btn-voz-nino" class="btn-audio bg-gradient-to-r from-pink-500 to-yellow-500 py-3 text-lg rounded-xl" onclick="toggleVoz()">🐦 ¡Háblame!</button>
-          <div class="mt-4 bg-bosque/10 rounded-xl p-4 border border-bosque/20">
-            <h4 class="font-black text-bosque">⚡ ¡Mi Súper Poder!</h4>
-            <p id="nino-superpoder" class="text-sm font-semibold text-pizarra/90 mt-1"></p>
-          </div>
+    <button id="btn-ubicacion" onclick="centrarMiUbicacion()" class="absolute -bottom-6 right-4 bg-white text-pizarra w-12 h-12 rounded-full shadow-lg border-2 border-hoja flex items-center justify-center text-xl z-20 hover:scale-105 active:scale-95 transition-transform">
+      📍
+    </button>
+  </header>
+
+  <div id="map"></div>
+
+  <main class="p-4 max-w-xl mx-auto -mt-2 relative z-30 flex flex-col gap-5">
+
+    <div id="contenedor-registro-ave">
+      <button id="btn-registrar-avistamiento" onclick="registrarAvistamientoActual()" class="w-full bg-gradient-to-r from-sol to-amber-500 hover:from-amber-500 hover:to-sol text-pizarra font-black py-3.5 px-5 rounded-2xl shadow-md border-2 border-sol flex items-center justify-center gap-2 text-sm uppercase tracking-wider transition-all transform active:scale-95">
+        📸 Registrar Avistamiento ✨
+      </button>
+    </div>
+
+    <div id="tarjeta-adulto" class="tarjeta-modo activo bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+      <div class="bg-gradient-to-b from-pizarra to-slate-700 p-5 text-white flex items-center gap-4 relative">
+        <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center text-4xl shadow-inner border border-white/10" id="adulto-emoji">🌈</div>
+        <div class="flex-1">
+          <h2 class="text-xl font-black tracking-tight leading-tight" id="adulto-nombre">Siete Colores</h2>
+          <p class="text-xs text-hoja italic font-semibold mt-0.5" id="adulto-cientifico">Tachuris rubrigastra</p>
         </div>
       </div>
+      
+      <div class="p-5 flex flex-col gap-4">
+        <button id="btn-audio-a" onclick="toggleAudio()" class="btn-audio w-full bg-gradient-to-r from-bosque to-emerald-600 hover:from-emerald-600 hover:to-bosque text-white font-black py-3 px-4 rounded-xl text-sm shadow-sm flex items-center justify-center gap-2 transition-all active:scale-98">
+          <span id="audio-icon-a">🔊</span> <span id="audio-lbl-a">Escuchar Canto Real</span>
+        </button>
 
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-niebla p-3.5 rounded-xl border border-gray-100">
+            <h4 class="text-[10px] font-black uppercase text-pizarra/40 tracking-wider">🗺️ Distribución / Zona</h4>
+            <p class="text-xs font-bold text-pizarra mt-1" id="adulto-zona">Centro-Sur</p>
+          </div>
+          <div class="bg-niebla p-3.5 rounded-xl border border-gray-100">
+            <h4 class="text-[10px] font-black uppercase text-pizarra/40 tracking-wider">🛡️ Estado Conservación</h4>
+            <p class="text-xs font-bold text-coral mt-1" id="adulto-conservacion">Preocupación Menor</p>
+          </div>
+        </div>
+
+        <div class="bg-niebla p-4 rounded-xl border border-gray-100">
+          <h4 class="text-[10px] font-black uppercase text-pizarra/40 tracking-wider mb-1">🌲 Hábitat Específico</h4>
+          <p class="text-xs font-medium text-pizarra/90 leading-relaxed font-prose" id="adulto-habitat">Cargando hábitat...</p>
+        </div>
+      </div>
     </div>
-  </section>
 
-  <!-- SECCIÓN ÁLBUM PAGINADO (¡NUEVO!) -->
-  <section class="mt-8 bg-white p-4 rounded-2xl shadow-sm">
-    <h2 class="text-pizarra font-black text-md uppercase tracking-wider mb-3 text-center">📖 Mi Álbum de Colección</h2>
-    <div id="album-grid" class="grid grid-cols-2 gap-3"></div>
-    
-    <!-- Controles de Paginación -->
-    <div class="flex items-center justify-between mt-5 pt-3 border-t border-gray-100">
-      <button id="btn-pag-ant" onclick="cambiarPaginaAlbum(-1)" class="px-4 py-2 bg-gray-100 text-pizarra font-bold text-xs rounded-xl disabled:opacity-40">◀ Anterior</button>
-      <span id="txt-paginacion" class="text-xs font-bold text-pizarra/60">Página 1 de 1</span>
-      <button id="btn-pag-sig" onclick="cambiarPaginaAlbum(1)" class="px-4 py-2 bg-gray-100 text-pizarra font-bold text-xs rounded-xl disabled:opacity-40">Siguiente ▶</button>
+    <div id="tarjeta-nino" class="tarjeta-modo bg-white rounded-3xl shadow-xl border-4 border-sol overflow-hidden">
+      <div class="bg-gradient-to-b from-sol to-amber-300 p-5 text-pizarra flex items-center gap-4 relative">
+        <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-4xl shadow-md" id="nino-emoji">🌈</div>
+        <div class="flex-1">
+          <h2 class="text-xl font-black tracking-tight leading-tight" id="nino-nombre">Siete Colores</h2>
+          <span class="text-[10px] font-black bg-white/60 text-tierra px-2 py-0.5 rounded-full uppercase tracking-wider">¡Amigo Alado! 🧸</span>
+        </div>
+      </div>
+      
+      <div class="p-5 flex flex-col gap-4">
+        <button id="btn-audio-n" onclick="toggleAudio()" class="btn-audio w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-rose-500 hover:to-pink-500 text-white font-black py-3 px-4 rounded-xl text-sm shadow-md flex items-center justify-center gap-2 transition-all relative overflow-visible">
+          <span id="audio-icon-n">🎵</span> <span id="audio-lbl-n">¡Escuchar Pajarito!</span>
+        </button>
+
+        <button id="btn-voz-nino" onclick="toggleVoz()" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-purple-600 hover:to-indigo-500 text-white font-black py-3 px-4 rounded-xl text-sm shadow-sm flex items-center justify-center gap-2 transition-all">
+          🗣️ ¡Háblame del ave!
+        </button>
+
+        <div class="bg-sol/10 rounded-2xl p-4 border-2 border-sol/30">
+          <h4 class="font-black text-tierra text-sm flex items-center gap-1">⚡ ¡Mi Súper Poder!</h4>
+          <p id="nino-superpoder" class="text-xs font-bold text-pizarra/90 mt-1 leading-relaxed">Cargando superpoder...</p>
+        </div>
+
+        <div class="bg-sky-50 rounded-2xl p-4 border border-sky-100">
+          <h4 class="font-black text-lago text-sm flex items-center gap-1">💡 ¿Sabías qué?</h4>
+          <p id="nino-curioso" class="text-xs font-semibold text-pizarra/80 mt-1 leading-relaxed font-prose">Cargando dato divertido...</p>
+        </div>
+      </div>
     </div>
-  </section>
-</main>
 
-<script src="app.js"></script>
+    <section class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-2.5">
+      <div class="flex items-center justify-between font-black text-xs text-pizarra tracking-wider uppercase">
+        <span id="txt-progreso-conteo">🏆 Descubiertas: 0 / 0</span>
+        <span id="txt-medalla-rango" class="text-xs bg-sol text-tierra px-2 py-0.5 rounded-md font-black shadow-sm">🥚 Huevo</span>
+      </div>
+      <div class="w-full bg-gray-100 h-3.5 rounded-full overflow-hidden border border-gray-200 p-0.5">
+        <div id="barra-progreso-llenado" class="bg-gradient-to-r from-bosque via-hoja to-sol h-full rounded-full transition-all duration-700" style="width: 0%"></div>
+      </div>
+    </section>
+
+    <section class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+      <h2 class="text-pizarra font-black text-xs uppercase tracking-widest mb-4 text-center">📖 Mi Álbum de Colección</h2>
+      
+      <div id="album-grid" class="grid grid-cols-2 gap-3"></div>
+      
+      <div class="flex items-center justify-between mt-5 pt-3 border-t border-gray-100">
+        <button id="btn-pag-ant" onclick="cambiarPaginaAlbum(-1)" class="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:hover:bg-gray-100 text-pizarra font-black text-xs rounded-xl transition-all border border-gray-200">
+          ⬅️ Anterior
+        </button>
+        <span id="txt-paginacion" class="text-xs font-black text-pizarra/50 tracking-wider uppercase">Página 1 de 6</span>
+        <button id="btn-pag-sig" onclick="cambiarPaginaAlbum(1)" class="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:hover:bg-gray-100 text-pizarra font-black text-xs rounded-xl transition-all border border-gray-200">
+          Siguiente ➡️
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="toast">
+    <span id="toast-icon">✨</span>
+    <span id="toast-msg">Mensaje de notificación</span>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>

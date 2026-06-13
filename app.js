@@ -3,42 +3,21 @@ let marcadorUsuario = null;
 let aves = [];
 let aveActual = null;
 let modoAdulto = true;
-let audioObjeto = null;
+
+// Controladores de Sonidos y Voz
+let audioObj = null;
+let audioSonando = false;
+let notasTimer = null;
 let vozActiva = false;
 
-// VARIABLES DEL ÁLBUM Y GAMIFICACIÓN
+// Paginación y Gamificación del Álbum
 let paginaActualAlbum = 1;
 const avesPorPagina = 10;
-// Cargamos las aves desbloqueadas desde el almacenamiento local del navegador
 let avesDesbloqueadas = JSON.parse(localStorage.getItem('avesDesbloqueadas')) || [];
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Insertamos los estilos CSS para las animaciones directamente
-  inyectarEstilosAnimacion();
   cargarBaseDeDatos();
 });
-
-// FUNCIÓN NUEVA: Inyecta CSS de animaciones para que todo brille al desbloquear
-function inyectarEstilosAnimacion() {
-  const style = document.createElement('style');
-  style.innerHTML = `
-    @keyframes estallido {
-      0% { transform: scale(1); filter: brightness(1); }
-      50% { transform: scale(1.08); filter: brightness(1.3); box-shadow: 0 0 25px rgba(247, 220, 111, 0.6); }
-      100% { transform: scale(1); filter: brightness(1); }
-    }
-    .animar-desbloqueo {
-      animation: estallido 0.6s ease-in-out 2;
-    }
-    .tarjeta-bloqueada-estilo {
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .ave-desbloqueada-item {
-      animation: estallido 0.5s ease-out 1;
-    }
-  `;
-  document.head.appendChild(style);
-}
 
 function cargarBaseDeDatos() {
   fetch('aves.json')
@@ -47,7 +26,7 @@ function cargarBaseDeDatos() {
       aves = data;
       
       const txtContador = document.getElementById('contador-aves');
-      if (txtContador) txtContador.textContent = `🐦 ${aves.length} aves`;
+      if (txtContador) txtContador.textContent = `🐦 ${aves.length} especies registradas`;
       
       initMapa();
       actualizarProgresoYMedallas(); 
@@ -59,16 +38,18 @@ function cargarBaseDeDatos() {
         }, 50);
       }
     })
-    .catch(err => console.error("Error cargando aves.json: ", err));
+    .catch(err => {
+      console.error("Error cargando aves.json: ", err);
+      mostrarToast("🔇 Error al cargar la base de datos", "❌");
+    });
 }
 
 function obtenerCoordenadasPorZona(ave) {
   if (ave.coordenadasEjemplo) return ave.coordenadasEjemplo;
-  
   let lat = -33.4489; 
   let lng = -70.6693;
-  
   const zona = ave.zona.toLowerCase();
+
   if (zona.includes("norte") || zona.includes("altiplano") || zona.includes("atacama")) {
     lat = -22.0 - (ave.id * 0.15);
     lng = -68.5 - ((ave.id % 3) * 0.1);
@@ -89,10 +70,6 @@ function initMapa() {
   if (mapa && typeof mapa.remove === 'function') {
     mapa.remove();
   }
-
-  const mapContainer = document.getElementById('map');
-  if (!mapContainer) return;
-
   mapa = L.map('map').setView([-35.0000, -71.5000], 5);
   
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -104,8 +81,8 @@ function initMapa() {
     const colorPin = ave.pinColor || '#1E8449'; 
     
     const pinHtml = `
-      <div class="ave-pin" style="background:${colorPin}; width:38px; height:38px; border-radius:50% 50% 50% 0; transform: rotate(-45deg); display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.3);">
-        <span class="ave-pin-emoji" style="transform: rotate(45deg); font-size:18px;">${ave.emoji}</span>
+      <div class="ave-pin" style="background:${colorPin};">
+        <span class="ave-pin-emoji">${ave.emoji}</span>
       </div>
     `;
     
@@ -117,7 +94,6 @@ function initMapa() {
     });
 
     const marker = L.marker(ave.coordenadasEjemplo, { icon: customIcon }).addTo(mapa);
-    
     marker.on('click', () => {
       seleccionarAve(ave, true); 
     });
@@ -128,144 +104,97 @@ function seleccionarAve(ave, moverMapa = true) {
   if (!ave) return;
   aveActual = ave;
   
-  // === INYECCIÓN DE DATOS - MODO ADULTO ===
-  const elAdultoEmoji = document.getElementById('adulto-emoji');
-  const elAdultoNombre = document.getElementById('adulto-nombre');
-  const elAdultoLine = document.getElementById('adulto-cientifico');
-  const elAdultoHabitat = document.getElementById('adulto-habitat');
-  const elAdultoConservacion = document.getElementById('adulto-conservacion');
-
-  if (elAdultoEmoji) elAdultoEmoji.textContent = ave.emoji;
-  if (elAdultoNombre) elAdultoNombre.textContent = ave.nombreComun || ave.nombre;
-  if (elAdultoLine) elAdultoLine.textContent = ave.nombreCientifico;
-  if (elAdultoHabitat) elAdultoHabitat.textContent = ave.habitat || "No especificado";
-  if (elAdultoConservacion) elAdultoConservacion.textContent = ave.conservacion || "No evaluado";
-
-  // === INYECCIÓN DE DATOS - MODO NIÑO ===
-  const elNinoEmoji = document.getElementById('nino-emoji');
-  const elNinoNombre = document.getElementById('nino-nombre');
-  const elNinoSuperpoder = document.getElementById('nino-superpoder');
-
-  if (elNinoEmoji) elNinoEmoji.textContent = ave.emoji;
-  if (elNinoNombre) elNinoNombre.textContent = ave.nombreComun || ave.nombre;
-  if (elNinoSuperpoder) elNinoSuperpoder.textContent = ave.superpoder || "¡Ser un ave genial! ✨";
-
-  // Control de reproducción de audios anteriores
-  if(audioObjeto) { audioObjeto.pause(); audioObjeto = null; }
-  const btnAudioA = document.getElementById('btn-audio-a');
-  if (btnAudioA) btnAudioA.textContent = "🔊 Escuchar Canto";
-  
+  detenerAudio();
   window.speechSynthesis?.cancel();
   vozActiva = false;
-  const btnVozNino = document.getElementById('btn-voz-nino');
-  if (btnVozNino) btnVozNino.textContent = "🐦 ¡Háblame!";
+  const btnVoz = document.getElementById('btn-voz-nino');
+  if (btnVoz) btnVoz.textContent = "🗣️ ¡Háblame del ave!";
 
-  // ACTUALIZAR O CREAR EL BOTÓN DE DESBLOQUEO DE FORMA DINÁMICA
-  actualizarBotonDesbloqueoDinamico();
+  // === INYECCIÓN TEXTOS MODO ADULTO ===
+  document.getElementById('adulto-emoji').textContent = ave.emoji;
+  document.getElementById('adulto-nombre').textContent = ave.nombreComun || ave.nombre;
+  document.getElementById('adulto-cientifico').textContent = ave.nombreCientifico;
+  document.getElementById('adulto-zona').textContent = ave.zona;
+  document.getElementById('adulto-conservacion').textContent = ave.conservacion || "Preocupación Menor";
+  document.getElementById('adulto-habitat').textContent = ave.habitat || "Sin especificar.";
+
+  // === INYECCIÓN TEXTOS MODO NIÑO ===
+  document.getElementById('nino-emoji').textContent = ave.emoji;
+  document.getElementById('nino-nombre').textContent = ave.nombreComun || ave.nombre;
+  document.getElementById('nino-superpoder').textContent = ave.superpoder || "¡Volar muy alto! ✨";
+  document.getElementById('nino-curioso').textContent = ave.datoCurioso || "¡Es un ave única de nuestros ecosistemas!";
+
+  // Actualizar Estado Visual del Botón de Avistamiento
+  actualizarBotonAvistamiento();
 
   if (moverMapa && mapa && ave.coordenadasEjemplo) {
     mapa.flyTo(ave.coordenadasEjemplo, 7, { animate: true, duration: 1.2 });
   }
 }
 
-// FUNCIÓN NUEVA: Dibuja y gestiona el botón de registrar avistamiento en tiempo real
-function actualizarBotonDesbloqueoDinamico() {
-  // Buscamos un contenedor común en las tarjetas para inyectar el botón
-  let btnRegistro = document.getElementById('btn-registro-manual-ave');
-  
-  if (!btnRegistro) {
-    // Si no existe, lo insertamos justo arriba de los datos descriptivos de la tarjeta
-    const contenedorTabs = document.querySelector('.tab-panel') || document.getElementById('tarjeta-adulto');
-    if (contenedorTabs) {
-      btnRegistro = document.createElement('button');
-      btnRegistro.id = 'btn-registro-manual-ave';
-      contenedorTabs.insertBefore(btnRegistro, contenedorTabs.firstChild);
-    }
-  }
-
-  if (!btnRegistro || !aveActual) return;
+function actualizarBotonAvistamiento() {
+  const btn = document.getElementById('btn-registrar-avistamiento');
+  if (!btn || !aveActual) return;
 
   const estaDesbloqueada = avesDesbloqueadas.includes(Number(aveActual.id));
 
   if (estaDesbloqueada) {
-    btnRegistro.className = "w-full mb-4 bg-gradient-to-r from-bosque to-hoja text-white font-black py-3 px-4 rounded-xl text-sm shadow-sm flex items-center justify-center gap-2 border border-bosque/20 cursor-default uppercase tracking-wider";
-    btnRegistro.innerHTML = "<span>✅ ¡Especie Avistada y Coleccionada!</span>";
-    btnRegistro.onclick = null; 
+    btn.className = "w-full bg-gradient-to-r from-bosque to-emerald-600 text-white font-black py-3.5 px-5 rounded-2xl shadow-sm flex items-center justify-center gap-2 text-sm uppercase tracking-wider cursor-default";
+    btn.innerHTML = "✅ ¡Especie Registrada en tu Colección!";
   } else {
-    btnRegistro.className = "w-full mb-4 bg-gradient-to-r from-sol to-amber-500 hover:from-amber-500 hover:to-sol text-pizarra font-black py-3 px-4 rounded-xl text-sm shadow-md flex items-center justify-center gap-2 border border-sol animate-pulse transition-all transform hover:scale-[1.02]";
-    btnRegistro.innerHTML = "<span>📸 Registrar Avistamiento ✨</span>";
-    btnRegistro.onclick = () => {
-      desbloquearAve(aveActual.id);
-    };
+    btn.className = "w-full bg-gradient-to-r from-sol to-amber-500 hover:from-amber-500 hover:to-sol text-pizarra font-black py-3.5 px-5 rounded-2xl shadow-md border-2 border-sol flex items-center justify-center gap-2 text-sm uppercase tracking-wider transition-all transform active:scale-95 animate-pulse";
+    btn.innerHTML = "📸 Registrar Avistamiento ✨";
   }
 }
 
-// LÓGICA DE JUEGO: DESBLOQUEAR AVES CON ANIMACIÓN SÚPER VISUAL
-function desbloquearAve(id) {
-  const aveId = Number(id);
-  if (!avesDesbloqueadas.includes(aveId)) {
-    avesDesbloqueadas.push(aveId);
-    localStorage.setItem('avesDesbloqueadas', JSON.stringify(avesDesbloqueadas));
-    
-    // 1. Agregar efectos y clases de animación a las tarjetas principales
-    const tAdulto = document.getElementById('tarjeta-adulto');
-    const tNino = document.getElementById('tarjeta-nino');
-    
-    if (tAdulto) { tAdulto.classList.add('animar-desbloqueo'); setTimeout(() => tAdulto.classList.remove('animar-desbloqueo'), 1200); }
-    if (tNino) { tNino.classList.add('animar-desbloqueo'); setTimeout(() => tNino.classList.remove('animar-desbloqueo'), 1200); }
+function registrarAvistamientoActual() {
+  if (!aveActual) return;
+  const aveId = Number(aveActual.id);
 
-    // 2. Refrescar los elementos de gamificación en el acto
-    actualizarProgresoYMedallas();
-    actualizarBotonDesbloqueoDinamico();
-    renderizarAlbum(aveId); // Pasamos el ID para animar su aparición en el álbum
+  if (avesDesbloqueadas.includes(aveId)) {
+    mostrarToast("Esta especie ya está en tu álbum", "🐦");
+    return;
   }
+
+  // Desbloqueo oficial
+  avesDesbloqueadas.push(aveId);
+  localStorage.setItem('avesDesbloqueadas', JSON.stringify(avesDesbloqueadas));
+
+  // Animación estallido visual en tarjetas
+  const tAdulto = document.getElementById('tarjeta-adulto');
+  const tNino = document.getElementById('tarjeta-nino');
+  if (tAdulto) { tAdulto.classList.add('animar-desbloqueo'); setTimeout(() => tAdulto.classList.remove('animar-desbloqueo'), 1000); }
+  if (tNino) { tNino.classList.add('animar-desbloqueo'); setTimeout(() => tNino.classList.remove('animar-desbloqueo'), 1000); }
+
+  mostrarToast(`¡${aveActual.nombreComun} añadido al álbum!`, "🏆");
+  
+  actualProgresoYMedallas();
+  actualizarBotonAvistamiento();
+  renderizarAlbum(aveId);
 }
 
 function actualizarProgresoYMedallas() {
   if (aves.length === 0) return;
-  
-  const totalAves = aves.length;
-  const totalDesbloqueadas = avesDesbloqueadas.length;
-  const porcentaje = Math.round((totalDesbloqueadas / totalAves) * 100);
+  const total = aves.length;
+  const descubiertas = avesDesbloqueadas.length;
+  const porcentaje = Math.round((descubiertas / total) * 100);
 
-  let contenedorProgreso = document.getElementById('progreso-wrapper');
-  
-  if (!contenedorProgreso) {
-    const albumGrid = document.getElementById('album-grid');
-    if (albumGrid && albumGrid.parentNode) {
-      contenedorProgreso = document.createElement('div');
-      contenedorProgreso.id = 'progreso-wrapper';
-      contenedorProgreso.className = 'mb-4 bg-white border border-gray-100 p-4 rounded-xl flex flex-col gap-2 shadow-sm';
-      contenedorProgreso.innerHTML = `
-        <div class="flex items-center justify-between font-black text-xs text-pizarra tracking-wider uppercase">
-          <span id="txt-progreso-conteo">🏆 Descubiertas: 0 / 0</span>
-          <span id="txt-medalla-rango" class="text-xs bg-sol/20 text-tierra px-2 py-1 rounded-md font-black">🥚 Huevo</span>
-        </div>
-        <div class="w-full bg-gray-100 h-3 rounded-full overflow-hidden border border-gray-200">
-          <div id="barra-progreso-llenado" class="bg-gradient-to-r from-bosque via-hoja to-sol h-full transition-all duration-700" style="width: 0%"></div>
-        </div>
-      `;
-      albumGrid.parentNode.insertBefore(contenedorProgreso, albumGrid);
-    }
-  }
-
-  let medalla = "🥚 Explorador Principiante (Huevo)";
-  if (porcentaje >= 25 && porcentaje < 50) medalla = "🐥 Observador Junior (Pichón)";
-  if (porcentaje >= 50 && porcentaje < 75) medalla = "🦅 Guardián del Aire (Halcón)";
-  if (porcentaje >= 75 && porcentaje < 100) medalla = "🇺🇦 Sabio del Bosque (Búho)";
-  if (porcentaje === 100) medalla = "👑 ¡Cóndor Supremo de Chile! 🇨🇱";
+  let rango = "🥚 Huevo (Principiante)";
+  if (porcentaje >= 25 && porcentaje < 50) rango = "🐥 Pichón (Observador)";
+  if (porcentaje >= 50 && porcentaje < 75) rango = "🦅 Halcón (Guardián)";
+  if (porcentaje >= 75 && porcentaje < 100) rango = "🦉 Búho (Experto)";
+  if (porcentaje === 100) rango = "👑 ¡Cóndor Supremo! 🇨🇱";
 
   const elConteo = document.getElementById('txt-progreso-conteo');
   const elMedalla = document.getElementById('txt-medalla-rango');
   const elBarra = document.getElementById('barra-progreso-llenado');
 
-  if (elConteo) elConteo.textContent = `🏆 Descubiertas: ${totalDesbloqueadas} / ${totalAves} (${porcentaje}%)`;
-  if (elMedalla) elMedalla.textContent = medalla;
+  if (elConteo) elConteo.textContent = `🏆 Descubiertas: ${descubiertas} / ${total} (${porcentaje}%)`;
+  if (elMedalla) elMedalla.textContent = rango;
   if (elBarra) elBarra.style.width = `${porcentaje}%`;
 }
 
-// RENDERIZAR EL ÁLBUM CON CONTROL DE EFECTOS PARA EL AVE RECIÉN DESCUBIERTA
-function renderizarAlbum(idRecienDesbloqueado = null) {
+function renderizarAlbum(idNueva = null) {
   const grid = document.getElementById('album-grid');
   if(!grid) return;
   grid.innerHTML = "";
@@ -275,27 +204,26 @@ function renderizarAlbum(idRecienDesbloqueado = null) {
   const avesPagina = aves.slice(inicio, fin);
 
   avesPagina.forEach(ave => {
-    const estaDesbloqueada = avesDesbloqueadas.includes(Number(ave.id));
-    const esLaNueva = Number(ave.id) === Number(idRecienDesbloqueado);
-    const claseAnimacion = esLaNueva ? 'ave-desbloqueada-item border-2 border-sol' : 'border border-gray-100 bg-white';
+    const descubierta = avesDesbloqueadas.includes(Number(ave.id));
+    const esNueva = Number(ave.id) === Number(idNueva);
 
-    if (estaDesbloqueada) {
+    if (descubierta) {
       grid.innerHTML += `
-        <div class="p-3 rounded-xl text-center shadow-sm hover:shadow hover:bg-gray-50 cursor-pointer transition-all transform hover:scale-[1.03] ${claseAnimacion}" 
+        <div class="p-3 rounded-2xl text-center shadow-sm border border-hoja bg-white hover:bg-gray-50 cursor-pointer transition-all transform active:scale-95 ${esNueva ? 'animar-desbloqueo border-2 border-sol' : ''}"
              onclick="event.stopPropagation(); seleccionarAvePorId(${ave.id})">
           <div class="text-3xl mb-1">${ave.emoji}</div>
-          <div class="font-black text-sm text-pizarra">${ave.nombreComun || ave.nombre}</div>
-          <div class="text-xs text-bosque font-extrabold uppercase tracking-widest mt-1" style="font-size: 9px;">✨ Descubierta</div>
+          <div class="font-black text-xs text-pizarra">${ave.nombreComun || ave.nombre}</div>
+          <div class="text-[9px] text-bosque font-black uppercase mt-1">✨ Avistada</div>
         </div>
       `;
     } else {
       grid.innerHTML += `
-        <div class="border border-gray-200 p-3 rounded-xl text-center bg-gray-100 opacity-60 filter grayscale cursor-not-allowed select-none tarjeta-bloqueada-estilo relative"
-             onclick="event.stopPropagation(); alert('¡Haz clic sobre el pin de este ave en el mapa para registrarla! 🗺️')">
-          <div class="absolute top-1 right-2 text-[10px] opacity-40">🔒</div>
+        <div class="border border-gray-200 p-3 rounded-2xl text-center bg-gray-100 opacity-50 filter grayscale cursor-not-allowed select-none relative"
+             onclick="event.stopPropagation(); mostrarToast('¡Pulsa registrar avistamiento para desbloquearla!', '🔒')">
+          <div class="absolute top-1 right-2 text-[9px]">🔒</div>
           <div class="text-3xl mb-1 filter blur-[2px]">❓</div>
           <div class="font-bold text-xs text-gray-400 italic">Incógnita</div>
-          <div class="text-pizarra/40 font-bold tracking-tighter mt-1" style="font-size: 8px; text-transform: uppercase;">Zona: ${ave.zona}</div>
+          <div class="text-[8px] text-pizarra/40 font-black uppercase mt-1">Zona: ${ave.zona.split(' ')[0]}</div>
         </div>
       `;
     }
@@ -305,10 +233,8 @@ function renderizarAlbum(idRecienDesbloqueado = null) {
   const txtPag = document.getElementById('txt-paginacion');
   if(txtPag) txtPag.textContent = `Página ${paginaActualAlbum} de ${totalPaginas}`;
   
-  const btnAnt = document.getElementById('btn-pag-ant');
-  const btnSig = document.getElementById('btn-pag-sig');
-  if(btnAnt) btnAnt.disabled = paginaActualAlbum === 1;
-  if(btnSig) btnSig.disabled = paginaActualAlbum === totalPaginas;
+  document.getElementById('btn-pag-ant').disabled = paginaActualAlbum === 1;
+  document.getElementById('btn-pag-sig').disabled = paginaActualAlbum === totalPaginas;
 }
 
 function cambiarPaginaAlbum(direccion) {
@@ -319,113 +245,172 @@ function cambiarPaginaAlbum(direccion) {
 function seleccionarAvePorId(id) {
   const encontrado = aves.find(a => a.id === Number(id));
   if(encontrado) {
-    seleccionarAve(encontrado, true); 
+    seleccionarAve(encontrado, true);
     document.getElementById('app-header')?.scrollIntoView({ behavior: 'smooth' });
   }
 }
 
+// LÓGICA DE AUDIOS, REPRODUCTOR Y NOTAS MUSICALES FLOTANTES
+function toggleAudio() {
+  if (!aveActual || !aveActual.sonidoUrl) {
+    mostrarToast("Canto no disponible para esta especie", "🔇");
+    return;
+  }
+
+  if (audioSonando) {
+    detenerAudio();
+  } else {
+    audioObj = new Audio(aveActual.sonidoUrl);
+    audioObj.play().then(() => {
+      audioSonando = true;
+      document.querySelectorAll('.btn-audio').forEach(btn => btn.classList.add('sonando'));
+      document.getElementById('audio-icon-a').textContent = '⏹';
+      document.getElementById('audio-lbl-a').textContent = 'Detener Canto';
+      document.getElementById('audio-icon-n').textContent = '⏹';
+      document.getElementById('audio-lbl-n').textContent = 'Detener Canto';
+
+      if (!modoAdulto) lanzarNotas();
+
+      audioObj.onended = () => detenerAudio();
+    }).catch(() => {
+      mostrarToast("No se pudo reproducir el canto", "🔇");
+    });
+  }
+}
+
+function detenerAudio() {
+  if (audioObj) {
+    audioObj.pause();
+    audioObj = null;
+  }
+  audioSonando = false;
+  clearInterval(notasTimer);
+  document.querySelectorAll('.btn-audio').forEach(btn => btn.classList.remove('sonando'));
+  
+  const iconA = document.getElementById('audio-icon-a');
+  const lblA = document.getElementById('audio-lbl-a');
+  const iconN = document.getElementById('audio-icon-n');
+  const lblN = document.getElementById('audio-lbl-n');
+
+  if (iconA) iconA.textContent = '🔊';
+  if (lblA) lblA.textContent = 'Escuchar Canto Real';
+  if (iconN) iconN.textContent = '🎵';
+  if (lblN) lblN.textContent = '¡Escuchar Pajarito!';
+}
+
+function lanzarNotas() {
+  const emojis = ['🎵','🎶','✨','🎼','🎵','🎶'];
+  const ref = document.getElementById('btn-audio-n');
+  if (!ref) return;
+  clearInterval(notasTimer);
+
+  notasTimer = setInterval(() => {
+    if (!audioSonando) { clearInterval(notasTimer); return; }
+    const nota = document.createElement('div');
+    nota.className = 'nota';
+    nota.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    nota.style.left = (15 + Math.random() * 70) + '%';
+    nota.style.bottom = '48px';
+    ref.parentElement.style.position = 'relative';
+    ref.parentElement.appendChild(nota);
+    setTimeout(() => nota.remove(), 1700);
+  }, 380);
+}
+
+function toggleVoz() {
+  if (!aveActual) return;
+  const btn = document.getElementById('btn-voz-nino');
+
+  if (vozActiva) {
+    window.speechSynthesis?.cancel();
+    vozActiva = false;
+    if (btn) btn.textContent = "🗣️ ¡Háblame del ave!";
+  } else {
+    const dCurioso = aveActual.datoCurioso || "Es un ave fantástica de Chile.";
+    const sPoder = aveActual.superpoder || "¡Tener plumas increíbles!";
+    const relato = `¡Hola! Soy el ${aveActual.nombreComun}. ${dCurioso} ¡Mi superpoder oculto es ${sPoder}!`;
+
+    const utterance = new SpeechSynthesisUtterance(relato);
+    utterance.lang = 'es-CL';
+    utterance.onend = () => {
+      vozActiva = false;
+      if (btn) btn.textContent = "🗣️ ¡Háblame del ave!";
+    };
+
+    window.speechSynthesis?.speak(utterance);
+    vozActiva = true;
+    if (btn) btn.textContent = "⏹ Detener Relato";
+  }
+}
+
+// CONTROL DE MODOS INTERFAZ
 function toggleModo() {
   modoAdulto = !modoAdulto;
   const tAdulto = document.getElementById('tarjeta-adulto');
   const tNino = document.getElementById('tarjeta-nino');
-  const lbl = document.getElementById('label-modo');
   const thumb = document.getElementById('switch-thumb');
+  const emoji = document.getElementById('switch-emoji');
 
-  if(modoAdulto) {
-    tAdulto?.classList.remove('oculta'); tAdulto?.classList.add('visible');
-    tNino?.classList.remove('visible'); tNino?.classList.add('oculta');
-    if(lbl) lbl.textContent = "Adulto 📊"; 
-    if(thumb) thumb.style.transform = "translateX(0px)";
+  detenerAudio();
+
+  if (modoAdulto) {
+    tAdulto.classList.add('activo'); tNino.classList.remove('activo');
+    if (thumb) thumb.style.transform = "translateX(0px)";
+    if (emoji) emoji.textContent = "📊";
   } else {
-    tAdulto?.classList.remove('visible'); tAdulto?.classList.add('oculta');
-    tNino?.classList.remove('oculta'); tNino?.classList.add('visible');
-    if(lbl) lbl.textContent = "Niño 🧸"; 
-    if(thumb) thumb.style.transform = "translateX(28px)";
+    tNino.classList.add('activo'); tAdulto.classList.remove('activo');
+    if (thumb) thumb.style.transform = "translateX(32px)";
+    if (emoji) emoji.textContent = "🧸";
   }
 }
 
-function toggleAudio() {
-  if(!aveActual || !aveActual.sonidoUrl) {
-    alert("El canto real en audio no está configurado para esta especie.");
-    return;
-  }
-  const btn = document.getElementById('btn-audio-a');
-  if(audioObjeto && !audioObjeto.paused) {
-    audioObjeto.pause();
-    if(btn) btn.textContent = "🔊 Escuchar Canto";
-  } else {
-    if(!audioObjeto) audioObjeto = new Audio(aveActual.sonidoUrl);
-    audioObjeto.play();
-    if(btn) btn.textContent = "⏸ Pausar Canto";
-    audioObjeto.onended = () => { if(btn) btn.textContent = "🔊 Escuchar Canto"; };
-  }
+// ELEMENTO TOAST CUSTOM DE NOTIFICACIONES
+function mostrarToast(msg, icono = "✨") {
+  const toast = document.getElementById('toast');
+  const tIcon = document.getElementById('toast-icon');
+  const tMsg = document.getElementById('toast-msg');
+
+  if (!toast) return;
+  tIcon.textContent = icono;
+  tMsg.textContent = msg;
+
+  toast.classList.add('ver');
+  setTimeout(() => {
+    toast.classList.remove('ver');
+  }, 2800);
 }
 
-function abrirTab(tabName, boton) {
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('activo'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('activa'));
-  document.getElementById(`panel-${tabName}`)?.classList.add('activo');
-  boton?.classList.add('activa');
-}
-
-function toggleVoz() {
-  if(!aveActual) return;
-  const btn = document.getElementById('btn-voz-nino');
-  if(vozActiva) {
-    window.speechSynthesis?.cancel();
-    vozActiva = false;
-    if(btn) btn.textContent = "🐦 ¡Háblame!";
-  } else {
-    const textoInformativo = aveActual.datoCurioso || "¡Soy un ave fantástica de Chile!";
-    const texto = `¡Hola! Soy el ${aveActual.nombreComun || aveActual.nombre}. ${textoInformativo} ¡Mi superpoder es: ${aveActual.superpoder}!`;
-    
-    const ut = new SpeechSynthesisUtterance(texto);
-    ut.lang = 'es-CL';
-    ut.onend = () => {
-      vozActiva = false;
-      if(btn) btn.textContent = "🐦 ¡Háblame!";
-    };
-    window.speechSynthesis?.speak(ut);
-    vozActiva = true;
-    if(btn) btn.textContent = "⏸ Detener Voz";
-  }
-}
-
+// GPS UBICACIÓN USUARIO
 function centrarMiUbicacion() {
   if (!navigator.geolocation) {
-    alert("Tu dispositivo no soporta geolocalización.");
+    mostrarToast("Tu navegador no soporta GPS", "📍");
     return;
   }
-  const btnUbicacion = document.getElementById('btn-ubicacion');
-  if(btnUbicacion) btnUbicacion.textContent = "⏳";
+  const btn = document.getElementById('btn-ubicacion');
+  if (btn) btn.textContent = "⏳";
 
   navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-      if(btnUbicacion) btnUbicacion.textContent = "📍";
+    (pos) => {
+      if (btn) btn.textContent = "📍";
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
 
-      if (marcadorUsuario) {
-        mapa.removeLayer(marcadorUsuario);
-      }
+      if (marcadorUsuario) mapa.removeLayer(marcadorUsuario);
 
-      const usuarioIcon = L.divIcon({
-        html: `<div style="background:#2980B9; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(0,0,0,0.4);\"></div>`,
-        className: '',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
+      const uIcon = L.divIcon({
+        html: `<div style="background:#2980B9; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(0,0,0,0.4);"></div>`,
+        className: '', iconSize: [20, 20], iconAnchor: [10, 10]
       });
 
-      marcadorUsuario = L.marker([lat, lng], { icon: usuarioIcon }).addTo(mapa)
+      marcadorUsuario = L.marker([lat, lng], { icon: uIcon }).addTo(mapa)
         .bindPopup("<b class='p-2 block text-center text-xs text-pizarra'>¡Estás aquí! 🌲</b>")
         .openPopup();
 
       mapa.flyTo([lat, lng], 13, { animate: true, duration: 1.8 });
     },
-    (error) => {
-      if(btnUbicacion) btnUbicacion.textContent = "📍";
-      console.error("Error GPS: ", error);
-      alert("No pudimos obtener tu ubicación actual.");
+    () => {
+      if (btn) btn.textContent = "📍";
+      mostrarToast("No pudimos acceder al GPS", "❌");
     },
     { enableHighAccuracy: true, timeout: 7000 }
   );
