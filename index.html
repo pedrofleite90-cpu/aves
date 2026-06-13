@@ -2,14 +2,18 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <!-- Optimización clave para evitar zoom molesto en celulares -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Alas de Chile 🐦</title>
 
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
+  <!-- Leaflet.js (Mapas) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&family=Lora:wght@400;600&display=swap" rel="stylesheet" />
 
@@ -29,9 +33,9 @@
   </script>
 
   <style>
-    body { font-family: 'Nunito', sans-serif; background-color: #F0F4F8; }
+    body { font-family: 'Nunito', sans-serif; background-color: #F0F4F8; -webkit-tap-highlight-color: transparent; }
     
-    /* Estilos para los Pines personalizados del mapa */
+    /* Pines del mapa */
     .ave-pin {
       width: 38px; height: 38px; border-radius: 50% 50% 50% 0;
       position: absolute; transform: rotate(-45deg);
@@ -40,47 +44,47 @@
     }
     .ave-pin-emoji { transform: rotate(45deg); font-size: 19px; }
 
-    /* Modos de tarjetas (Adulto/Niño) */
+    /* Modos de tarjetas */
     .tab-panel { display: none; }
-    .tab-panel.activo { display: block; animation: fadeIn 0.4s ease; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .tab-panel.activo { display: block; }
 
-    /* Estilos dinámicos para los carruseles controlados por JS */
-    .car-container { position: relative; width: 100%; height: 256px; overflow: hidden; background: #2C3E50; }
-    .car-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.5s ease-in-out; display: flex; align-items: center; justify-content: center; }
+    /* Estructura del carrusel dinámico para iNaturalist */
+    .car-container { position: relative; width: 100%; height: 100%; overflow: hidden; background: #2C3E50; }
+    .car-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.4s ease-in-out; }
     .car-slide.activo { opacity: 1; z-index: 10; }
     .car-slide img { width: 100%; height: 100%; object-fit: cover; }
 
-    .car-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; transition: all 0.3s; }
-    .car-dot.activo { background: #FFFFFF; transform: scale(1.3); }
-    
-    #car-dots-nino .car-dot.activo { background: #2C3E50; }
-    #car-dots-nino .car-dot { background: rgba(0,0,0,0.2); }
+    .car-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; }
+    .car-dot.activo { background: #FFFFFF; transform: scale(1.2); }
   </style>
 </head>
 <body class="text-pizarra min-h-screen flex flex-col antialiased">
 
-  <header id="app-header" class="bg-lago text-white py-4 px-4 shadow-md sticky top-0 z-[1000] flex justify-between items-center">
+  <!-- CABECERA -->
+  <header class="bg-lago text-white py-3 px-4 shadow-md sticky top-0 z-[1000] flex justify-between items-center">
     <div>
-      <h1 class="font-black text-xl tracking-tight flex items-center gap-2">Alas de Chile 🐦</h1>
-      <p id="contador-aves" class="text-xs text-cielo font-semibold">🐦 Cargando enciclopedia...</p>
+      <h1 class="font-black text-lg sm:text-xl tracking-tight flex items-center gap-2">Alas de Chile 🐦</h1>
+      <p id="contador-aves" class="text-xs text-cielo font-semibold">Cargando enciclopedia...</p>
     </div>
 
-    <div class="flex items-center gap-2 bg-black/20 p-1.5 rounded-full cursor-pointer select-none" onclick="toggleModo()">
-      <span id="label-modo" class="text-xs font-black px-2 text-cielo">Adulto 📊</span>
-      <div class="w-14 h-6 bg-white/30 rounded-full p-0.5 relative transition-colors duration-300">
-        <div id="switch-thumb" class="w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 absolute left-0.5 top-0.5"></div>
-      </div>
-    </div>
+    <!-- Botón / Switch de Modo (Fácil de tocar en celular) -->
+    <button onclick="toggleModo()" class="bg-black/20 hover:bg-black/30 active:scale-95 transition-all px-3 py-1.5 rounded-full text-xs font-black text-white flex items-center gap-2">
+      <span id="label-modo">Modo Adulto 📊</span>
+    </button>
   </header>
 
-  <main class="flex-1 max-w-5xl w-full mx-auto p-4 space-y-4">
+  <!-- CONTENEDOR PRINCIPAL: Responsive Grid (1 columna en móvil, 2 en PC grande) -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
 
-    <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative">
+    <!-- COLUNA IZQUIERDA (MAPA Y FILTROS) - Toma 7 columnas en PC -->
+    <div class="lg:col-span-7 flex flex-col gap-4">
       
-      <div class="absolute top-3 left-12 z-[1000] right-3 sm:right-auto bg-white/95 backdrop-blur-sm px-3 py-2 rounded-xl shadow-md border border-gray-100 flex items-center gap-2">
-        <span class="text-xs font-black text-pizarra hidden sm:inline">📍 Zona:</span>
-        <select id="filtro-zona" onchange="filtrarPorZona(this.value)" class="text-xs font-bold text-pizarra bg-gray-50 border border-gray-200 rounded-lg p-1.5 outline-none cursor-pointer focus:border-lago">
+      <!-- Bloque del Filtro por Zonas -->
+      <div class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <label for="filtro-zona" class="text-xs font-black text-pizarra flex items-center gap-1">
+          📍 Filtrar aves por ecosistema:
+        </label>
+        <select id="filtro-zona" onchange="filtrarPorZona(this.value)" class="text-sm font-bold text-pizarra bg-gray-50 border border-gray-200 rounded-xl p-2 outline-none cursor-pointer focus:border-lago w-full sm:w-auto">
           <option value="Todas">🇨🇱 Todo Chile (54 aves)</option>
           <option value="Norte">🌵 Zona Norte</option>
           <option value="Centro">🏙️ Zona Centro</option>
@@ -92,104 +96,111 @@
         </select>
       </div>
 
-      <div id="map" class="w-full h-80 sm:h-96 z-10"></div>
-      
-      <button id="btn-ubicacion" onclick="centrarMiUbicacion()" class="absolute bottom-5 right-5 z-[1000] bg-lago hover:bg-lago/90 text-white w-12 h-12 rounded-full shadow-lg text-xl flex items-center justify-center transition-transform active:scale-95" title="Buscar mi ubicación real">
-        📍
-      </button>
-    </section>
+      <!-- Contenedor del Mapa (Se adapta al tamaño de pantalla) -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative flex-1 min-h-[320px] sm:min-h-[400px]">
+        <div id="map" class="w-full h-full z-10"></div>
+        <button id="btn-ubicacion" onclick="centrarMiUbicacion()" class="absolute bottom-4 right-4 z-[1000] bg-lago text-white w-11 h-11 rounded-full shadow-lg text-lg flex items-center justify-center active:scale-95 transition-transform" title="Mi ubicación">
+          📍
+        </button>
+      </div>
+    </div>
 
-    <section>
+    <!-- COLUMNA DERECHA (TARJETA DETALLE Y ÁLBUM) - Toma 5 columnas en PC -->
+    <div class="lg:col-span-5 flex flex-col gap-4">
       
-      <div id="tarjeta-adulto" class="tab-panel activo bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="car-container">
-          <div id="car-adulto" class="w-full h-full"></div>
+      <!-- === TARJETA ADULTO === -->
+      <div id="tarjeta-adulto" class="tab-panel activo bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+        <!-- Contenedor de Imagen Altura Fija Inteligente para Celular/PC -->
+        <div class="h-56 sm:h-64 relative">
+          <!-- VACIADO para recibir las fotos de iNaturalist -->
+          <div id="car-adulto" class="car-container"></div>
           
-          <button onclick="carMover(-1)" class="absolute left-3 top-1/2 -translate-y-1/2 z-20 bg-black/40 hover:bg-black/60 text-white w-9 h-9 rounded-full font-black text-sm">◀</button>
-          <button onclick="carMover(1)" class="absolute right-3 top-1/2 -translate-y-1/2 z-20 bg-black/40 hover:bg-black/60 text-white w-9 h-9 rounded-full font-black text-sm">▶</button>
-          
-          <div id="car-dots-adulto" class="absolute bottom-3 left-1/2 -translate-y-1/2 z-20 flex gap-1.5"></div>
+          <!-- Controles táctiles/click del carrusel -->
+          <button onclick="carMover(-1)" class="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black/30 text-white w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center">◀</button>
+          <button onclick="carMover(1)" class="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black/30 text-white w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center">▶</button>
+          <div id="car-dots-adulto" class="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex gap-1"></div>
         </div>
 
-        <div class="p-5 space-y-4">
-          <div class="flex justify-between items-start border-b border-gray-100 pb-3">
+        <!-- Info del ave -->
+        <div class="p-4 space-y-3">
+          <div class="flex justify-between items-start gap-2 border-b border-gray-100 pb-2">
             <div>
-              <div class="flex items-center gap-2">
-                <span id="adulto-emoji" class="text-3xl">🐦</span>
-                <h2 id="adulto-nombre" class="font-black text-2xl tracking-tight text-pizarra">---</h2>
-              </div>
-              <p id="adulto-cientifico" class="text-sm italic text-gray-400 font-semibold mt-0.5">---</p>
+              <h2 class="font-black text-xl text-pizarra flex items-center gap-1.5">
+                <span id="adulto-emoji">🐦</span>
+                <span id="adulto-nombre">---</span>
+              </h2>
+              <p id="adulto-cientifico" class="text-xs italic text-gray-400 font-bold mt-0.5">---</p>
             </div>
-            <button id="btn-audio-a" onclick="toggleAudio()" class="bg-lago hover:bg-lago/90 text-white text-xs font-black px-4 py-2.5 rounded-xl shadow-sm transition-colors">
-              🔊 Escuchar Canto
+            <button id="btn-audio-a" onclick="toggleAudio()" class="bg-lago hover:bg-lago/90 text-white text-xs font-black px-3 py-2 rounded-xl transition-colors shrink-0">
+              🔊 Canto
             </button>
           </div>
 
+          <!-- Tabs Técnicas -->
           <div>
-            <div class="flex gap-2 border-b border-gray-100 text-xs font-black">
-              <button onclick="abrirTab('habitat', this)" class="tab-btn activa border-b-2 border-lago pb-2 px-1 text-lago">Habitat y Distribución</button>
-              <button onclick="abrirTab('conservacion', this)" class="tab-btn border-b-2 border-transparent pb-2 px-1 text-gray-400 hover:text-pizarra">Estado de Conservación</button>
+            <div class="flex gap-3 border-b border-gray-100 text-xs font-black mb-2">
+              <button onclick="abrirTab('habitat', this)" class="tab-btn activa border-b-2 border-lago pb-1 text-lago">Hábitat</button>
+              <button onclick="abrirTab('conservacion', this)" class="tab-btn border-b-2 border-transparent pb-1 text-gray-400">Conservación</button>
             </div>
-            
-            <div id="panel-habitat" class="tab-panel activo text-sm text-pizarra/80 font-prose leading-relaxed pt-3">
+            <div id="panel-habitat" class="tab-panel activo text-xs sm:text-sm font-prose text-gray-600 leading-relaxed">
               <p id="adulto-habitat">---</p>
             </div>
-            <div id="panel-conservacion" class="tab-panel text-sm text-pizarra/80 font-prose leading-relaxed pt-3">
-              <p id="adulto-conservacion" class="inline-block bg-coral/10 text-coral font-bold px-3 py-1 rounded-lg">---</p>
+            <div id="panel-conservacion" class="tab-panel text-xs sm:text-sm font-prose text-gray-600 leading-relaxed">
+              <p id="adulto-conservacion" class="inline-block bg-red-50 text-coral font-bold px-2.5 py-1 rounded-lg">---</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div id="tarjeta-nino" class="tab-panel bg-sol/30 rounded-3xl border-4 border-sol overflow-hidden">
-        <div class="car-container border-b-4 border-sol">
-          <div id="car-nino" class="w-full h-full"></div>
-          <div id="car-dots-nino" class="absolute bottom-3 left-1/2 -translate-y-1/2 z-20 flex gap-1.5"></div>
+      <!-- === TARJETA NIÑO === -->
+      <div id="tarjeta-nino" class="tab-panel bg-sol/20 rounded-2xl border-4 border-sol overflow-hidden flex flex-col">
+        <div class="h-56 sm:h-64 relative">
+          <!-- VACIADO para iNaturalist Infantil -->
+          <div id="car-nino" class="car-container"></div>
+          <div id="car-dots-nino" class="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex gap-1"></div>
         </div>
-
-        <div class="p-6 text-center space-y-5">
-          <div>
-            <span id="nino-emoji" class="text-6xl block animate-bounce">🐦</span>
-            <h2 id="nino-nombre" class="font-black text-3xl tracking-tight text-pizarra mt-2">---</h2>
-          </div>
-
-          <div class="bg-white/80 backdrop-blur-sm p-4 rounded-2xl border-2 border-sol/50 text-base font-black text-pizarra shadow-sm max-w-md mx-auto">
+        <div class="p-4 text-center space-y-3">
+          <h2 class="font-black text-2xl text-pizarra flex items-center justify-center gap-2">
+            <span id="nino-emoji">🐦</span>
+            <span id="nino-nombre">---</span>
+          </h2>
+          <div class="bg-white/90 p-3 rounded-xl border border-sol/40 text-sm font-bold text-pizarra shadow-sm">
             <p id="nino-superpoder">---</p>
           </div>
-
-          <button id="btn-voz-nino" onclick="toggleVoz()" class="bg-coral hover:bg-coral/90 text-white font-black px-6 py-4 rounded-2xl shadow-md text-lg transform active:scale-95 transition-all inline-flex items-center gap-2">
-            🐦 ¡Háblame!
+          <button id="btn-voz-nino" onclick="toggleVoz()" class="bg-coral text-white font-black px-4 py-2.5 rounded-xl text-sm active:scale-95 transition-transform inline-flex items-center gap-1">
+            📢 ¡Háblame!
           </button>
         </div>
       </div>
 
-    </section>
-
-    <section class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 space-y-4">
-      <div class="flex justify-between items-center border-b border-gray-100 pb-2">
-        <h3 class="font-black text-base text-pizarra tracking-tight">📚 Álbum de Colección</h3>
-        <span id="txt-paginacion" class="text-xs font-bold text-gray-400">Página -- de --</span>
-      </div>
-
-      <div id="album-grid" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <!-- === ÁLBUM DE COLECCIÓN === -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 flex flex-col justify-between flex-1">
+        <div>
+          <div class="flex justify-between items-center border-b border-gray-100 pb-2 mb-2">
+            <h3 class="font-black text-xs sm:text-sm text-pizarra">📚 Colección</h3>
+            <span id="txt-paginacion" class="text-[11px] font-bold text-gray-400">Pág --/--</span>
+          </div>
+          <!-- Grid dinámico: 3 columnas en celular, 4 o 5 en pantallas más grandes -->
+          <div id="album-grid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 gap-2">
+            <!-- Inyectado por JS -->
+          </div>
         </div>
 
-      <div class="flex justify-between items-center pt-2">
-        <button id="btn-pag-ant" onclick="cambiarPaginaAlbum(-1)" class="bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:hover:bg-gray-100 text-pizarra text-xs font-black px-4 py-2 rounded-xl transition-colors">
-          ◀ Anterior
-        </button>
-        <button id="btn-pag-sig" onclick="cambiarPaginaAlbum(1)" class="bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:hover:bg-gray-100 text-pizarra text-xs font-black px-4 py-2 rounded-xl transition-colors">
-          Siguiente ▶
-        </button>
+        <!-- Botones de navegación del álbum -->
+        <div class="flex justify-between items-center pt-3 mt-2 border-t border-gray-50">
+          <button id="btn-pag-ant" onclick="cambiarPaginaAlbum(-1)" class="bg-gray-100 text-pizarra text-xs font-black px-3 py-1.5 rounded-lg active:scale-95 transition-transform">◀ Ant</button>
+          <button id="btn-pag-sig" onclick="cambiarPaginaAlbum(1)" class="bg-gray-100 text-pizarra text-xs font-black px-3 py-1.5 rounded-lg active:scale-95 transition-transform">Sig ▶</button>
+        </div>
       </div>
-    </section>
 
+    </div>
   </main>
 
-  <footer class="bg-pizarra text-white/40 text-center text-xs py-4 border-t border-white/5 font-semibold mt-8">
+  <footer class="bg-pizarra text-white/30 text-center text-[10px] py-3 mt-4 border-t border-white/5 font-semibold">
     Alas de Chile &copy; 2026 &bull; Conectado a iNaturalist API
   </footer>
 
+  <!-- Archivo Lógico Cerebro -->
   <script src="app.js"></script>
 </body>
 </html>
