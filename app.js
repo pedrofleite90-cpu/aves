@@ -1,299 +1,203 @@
-let mapa;
-let marcadorUsuario = null; // Guarda el pin del GPS del usuario
-let aves = [];
-let aveActual = null;
-let modoAdulto = true;
-let fotosActuales = [];
-let fotoIndex = 0;
-let audioObjeto = null;
-let vozActiva = false;
+// ==========================================
+// ESTADO GLOBAL DE LA APP
+// ==========================================
+let infoAves = [];          // Aquí se cargarán las 54 aves del aves.json
+let aveSeleccionada = null;  // Ave que se muestra actualmente en pantalla
+let imagenesActuales = [];  // URLs de las fotos devueltas por iNaturalist
+let idxImagenActual = 0;    // Índice del carrusel de fotos
 
-// Variables globales de paginación para el Álbum
-let paginaActualAlbum = 1;
-const avesPorPagina = 10;
-
+// ==========================================
+// 1. CARGA DE LA BASE DE DATOS (aves.json)
+// ==========================================
 document.addEventListener("DOMContentLoaded", () => {
-  cargarBaseDeDatos();
+  fetch("aves.json")
+    .then(response => {
+      if (!response.ok) throw new Error("No se pudo cargar el archivo aves.json");
+      return response.json();
+    })
+    .then(data => {
+      infoAves = data;
+      console.log(`✅ Base de datos cargada: ${infoAves.length} aves detectadas.`);
+      
+      // Actualizar contadores visuales de tu index original
+      const contador = document.getElementById("contador-aves");
+      if (contador) contador.innerText = `🐦 ${infoAves.length} aves`;
+
+      // Inicializar funciones del mapa y cargar el ave por defecto (ej: la primera)
+      inicializarMapaConAves();
+      seleccionarAve(infoAves[0].id);
+    })
+    .catch(error => {
+      console.error("❌ Error al inicializar la base de datos:", error);
+    });
 });
 
-function cargarBaseDeDatos() {
-  fetch('aves.json')
-    .then(response => response.json())
-    .then(data => {
-      aves = data;
-      document.getElementById('contador-aves').textContent = `🐦 ${aves.length} aves`;
-      initMapa();
-      renderizarAlbum(); 
-      if(aves.length > 0) {
-        seleccionarAve(aves[0], false); // Iniciamos sin mover el mapa al arrancar
-      }
-    })
-    .catch(err => console.error("Error cargando aves.json: ", err));
-}
-
-function initMapa() {
-  mapa = L.map('map').setView([-33.4489, -70.6693], 6);
+// ==========================================
+// 2. CONEXIÓN CON LA API DE iNATURALIST
+// ==========================================
+async function cargarImagenesINaturalist(nombreCientifico) {
+  // Limpiamos el carrusel actual y mostramos un estado de carga rápido
+  const contenedorAdulto = document.getElementById("car-adulto");
+  const contenedorNino = document.getElementById("car-nino");
   
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(mapa);
+  if (contenedorAdulto) contenedorAdulto.innerHTML = `<div class="car-placeholder text-white text-xs p-4 flex items-center justify-center h-full">🔍 Buscando fotos reales en iNaturalist...</div>`;
+  if (contenedorNino) contenedorNino.innerHTML = `<div class="car-placeholder text-pizarra text-xs p-4 flex items-center justify-center h-full">🎨 Buscando fotitos...</div>`;
 
-  aves.forEach(ave => {
-    const pinHtml = `
-      <div class="ave-pin" style="background:${ave.pinColor};">
-        <span class="ave-pin-emoji">${ave.emoji}</span>
-      </div>
-    `;
-    
-    const customIcon = L.divIcon({
-      html: pinHtml,
-      className: '',
-      iconSize: [38, 38],
-      iconAnchor: [19, 38]
-    });
+  // Codificamos el nombre científico para la URL (Ej: "Tachuris rubrigastra")
+  const query = encodeURIComponent(nombreCientifico);
+  const urlAPI = `https://api.inaturalist.org/v1/taxa?q=${query}&per_page=1`;
 
-    const marker = L.marker(ave.coordenadasEjemplo, { icon: customIcon }).addTo(mapa);
-    
-    marker.on('click', () => {
-      seleccionarAve(ave, true); // Al hacer clic en el mapa, centramos suavemente
-    });
-  });
-}
+  try {
+    const respuesta = await fetch(urlAPI);
+    const datos = await respuesta.json();
 
-// moverMapa es un interruptor. Si es true, el mapa "vuela" hacia el ave.
-function seleccionarAve(ave, moverMapa = true) {
-  aveActual = ave;
-  
-  // Elementos Adulto
-  document.getElementById('adulto-emoji').textContent = ave.emoji;
-  document.getElementById('adulto-nombre').textContent = ave.nombreComun;
-  document.getElementById('adulto-cientifico').textContent = ave.nombreCientifico;
-  document.getElementById('adulto-habitat').textContent = ave.datosAdulto.habitat;
-  document.getElementById('adulto-conservacion').textContent = ave.datosAdulto.estadoConservacion;
+    imagenesActuales = []; // Reiniciamos el contenedor de URLs
+    idxImagenActual = 0;
 
-  // Elementos Niño
-  document.getElementById('nino-emoji').textContent = ave.emoji;
-  document.getElementById('nino-nombre').textContent = ave.nombreComun;
-  document.getElementById('nino-superpoder').textContent = ave.datosNino.superpoder;
-
-  // Reseteo de sonidos y voces activas
-  if(audioObjeto) { audioObjeto.pause(); audioObjeto = null; }
-  document.getElementById('btn-audio-a').textContent = "🔊 Escuchar Canto";
-  window.speechSynthesis?.cancel();
-  vozActiva = false;
-  document.getElementById('btn-voz-nino').textContent = "🐦 ¡Háblame!";
-
-  // NUEVO: Efecto de auto-zoom y vuelo dinámico en el mapa
-  if (moverMapa && mapa) {
-    mapa.flyTo(ave.coordenadasEjemplo, 9, {
-      animate: true,
-      duration: 1.5 // Duración del vuelo en segundos
-    });
-  }
-
-  obtenerFotosINaturalist(ave.nombreCientifico);
-}
-
-function obtenerFotosINaturalist(nombreCientifico) {
-  const contenedorAdulto = document.getElementById('car-adulto');
-  const contenedorNino = document.getElementById('car-nino');
-  
-  contenedorAdulto.innerHTML = `<div class="text-white text-xs p-4">Buscando fotos...</div>`;
-  contenedorNino.innerHTML = `<div class="text-pizarra text-xs p-4">Buscando fotos...</div>`;
-
-  fetch(`https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(nombreCientifico)}&per_page=1`)
-    .then(res => res.json())
-    .then(data => {
-      if(data.results && data.results.length > 0 && data.results[0].taxon_photos) {
-        fotosActuales = data.results[0].taxon_photos.slice(0, 5).map(p => p.photo.medium_url);
-      } else {
-        fotosActuales = ["https://images.unsplash.com/photo-1484557052118-f32bd25b45b5?w=500"];
-      }
-      fotoIndex = 0;
-      dibujarCarrusel();
-    })
-    .catch(() => {
-      fotosActuales = ["https://images.unsplash.com/photo-1484557052118-f32bd25b45b5?w=500"];
-      fotoIndex = 0;
-      dibujarCarrusel();
-    });
-}
-
-function dibujarCarrusel() {
-  const contA = document.getElementById('car-adulto');
-  const contN = document.getElementById('car-nino');
-  const dotsA = document.getElementById('car-dots-adulto');
-  const dotsN = document.getElementById('car-dots-nino');
-
-  contA.innerHTML = ""; contN.innerHTML = "";
-  dotsA.innerHTML = ""; dotsN.innerHTML = "";
-
-  fotosActuales.forEach((url, index) => {
-    const claseActiva = index === fotoIndex ? 'activo' : '';
-    contA.innerHTML += `<div class="car-slide ${claseActiva}"><img src="${url}" alt="foto"></div>`;
-    contN.innerHTML += `<div class="car-slide ${claseActiva}"><img src="${url}" alt="foto"></div>`;
-
-    const dotActivo = index === fotoIndex ? 'activo' : '';
-    dotsA.innerHTML += `<div class="car-dot ${dotActivo}" onclick="irAFoto(${index})"></div>`;
-    dotsN.innerHTML += `<div class="car-dot ${dotActivo}" onclick="irAFoto(${index})"></div>`;
-  });
-}
-
-function carMover(direccion) {
-  if (fotosActuales.length === 0) return;
-  fotoIndex += direccion;
-  if (fotoIndex >= fotosActuales.length) fotoIndex = 0;
-  if (fotoIndex < 0) fotoIndex = fotosActuales.length - 1;
-  dibujarCarrusel();
-}
-
-function irAFoto(index) {
-  fotoIndex = index;
-  dibujarCarrusel();
-}
-
-function renderizarAlbum() {
-  const grid = document.getElementById('album-grid');
-  grid.innerHTML = "";
-
-  const inicio = (paginaActualAlbum - 1) * avesPorPagina;
-  const fin = inicio + avesPorPagina;
-  const avesPagina = aves.slice(inicio, fin);
-
-  avesPagina.forEach(ave => {
-    grid.innerHTML += `
-      <div class="border border-gray-100 p-3 rounded-xl text-center bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors" 
-           onclick="event.stopPropagation(); seleccionarAvePorId('${ave.id}')">
-        <div class="text-3xl mb-1">${ave.emoji}</div>
-        <div class="font-black text-sm text-pizarra">${ave.nombreComun}</div>
-        <div class="text-xs text-pizarra/50 italic">${ave.nombreCientifico}</div>
-      </div>
-    `;
-  });
-
-  const totalPaginas = Math.ceil(aves.length / avesPorPagina) || 1;
-  document.getElementById('txt-paginacion').textContent = `Página ${paginaActualAlbum} de ${totalPaginas}`;
-  document.getElementById('btn-pag-ant').disabled = paginaActualAlbum === 1;
-  document.getElementById('btn-pag-sig').disabled = paginaActualAlbum === totalPaginas;
-}
-
-function cambiarPaginaAlbum(direccion) {
-  paginaActualAlbum += direccion;
-  renderizarAlbum();
-}
-
-function seleccionarAvePorId(id) {
-  const encontrado = aves.find(a => a.id === id);
-  if(encontrado) {
-    seleccionarAve(encontrado, true); // Activa el vuelo del mapa hacia el ave seleccionada
-    document.getElementById('app-header').scrollIntoView({ behavior: 'smooth' });
-  }
-}
-
-function toggleModo() {
-  modoAdulto = !modoAdulto;
-  const tAdulto = document.getElementById('tarjeta-adulto');
-  const tNino = document.getElementById('tarjeta-nino');
-  const lbl = document.getElementById('label-modo');
-  const thumb = document.getElementById('switch-thumb');
-
-  if(modoAdulto) {
-    tAdulto.classList.remove('oculta'); tAdulto.classList.add('visible');
-    tNino.classList.remove('visible'); tNino.classList.add('oculta');
-    lbl.textContent = "Adulto 📊"; thumb.style.transform = "translateX(0px)";
-  } else {
-    tAdulto.classList.remove('visible'); tAdulto.classList.add('oculta');
-    tNino.classList.remove('oculta'); tNino.classList.add('visible');
-    lbl.textContent = "Niño 🧸"; thumb.style.transform = "translateX(28px)";
-  }
-}
-
-function toggleAudio() {
-  if(!aveActual || !aveActual.sonidoUrl) return;
-  const btn = document.getElementById('btn-audio-a');
-  if(audioObjeto && !audioObjeto.paused) {
-    audioObjeto.pause();
-    btn.textContent = "🔊 Escuchar Canto";
-  } else {
-    if(!audioObjeto) audioObjeto = new Audio(aveActual.sonidoUrl);
-    audioObjeto.play();
-    btn.textContent = "⏸ Pausar Canto";
-    audioObjeto.onended = () => btn.textContent = "🔊 Escuchar Canto";
-  }
-}
-
-function abrirTab(tabName, boton) {
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('activo'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('activa'));
-  document.getElementById(`panel-${tabName}`).classList.add('activo');
-  boton.classList.add('activa');
-}
-
-function toggleVoz() {
-  if(!aveActual) return;
-  const btn = document.getElementById('btn-voz-nino');
-  if(vozActiva) {
-    window.speechSynthesis?.cancel();
-    vozActiva = false;
-    btn.textContent = "🐦 ¡Háblame!";
-  } else {
-    const texto = `${aveActual.fraseNino}. ¡Mi superpoder es: ${aveActual.datosNino.superpoder}!`;
-    const ut = new SpeechSynthesisUtterance(texto);
-    ut.lang = 'es-CL';
-    ut.onend = () => {
-      vozActiva = false;
-      btn.textContent = "🐦 ¡Háblame!";
-    };
-    window.speechSynthesis?.speak(ut);
-    vozActiva = true;
-    btn.textContent = "⏸ Detener Voz";
-  }
-}
-
-// NUEVA FUNCIÓN: Geolocalización GPS Real por Navegador
-function centrarMiUbicacion() {
-  if (!navigator.geolocation) {
-    alert("Tu navegador o teléfono no soporta la geolocalización.");
-    return;
-  }
-
-  // Cambiamos el estado visual del botón para avisar que está buscando
-  const btnUbicacion = document.getElementById('btn-ubicacion');
-  btnUbicacion.textContent = "⏳";
-
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-
-      // Volver a colocar el emoji original
-      btnUbicacion.textContent = "📍";
-
-      // Si ya existía un pin de usuario previo, lo removemos para no duplicar
-      if (marcadorUsuario) {
-        mapa.removeLayer(marcadorUsuario);
-      }
-
-      // Creamos un pin especial de color azul brillante para el usuario
-      const usuarioIcon = L.divIcon({
-        html: `<div style="background:#2980B9; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(0,0,0,0.4);"></div>`,
-        className: '',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
+    // Estructura de iNaturalist: resultados -> taxon -> taxon_photos
+    if (datos.results && datos.results[0] && datos.results[0].taxon_photos) {
+      const fotosRepasadas = datos.results[0].taxon_photos;
+      
+      // Filtramos y convertimos las imágenes a tamaño "medium" o "large" para que no se vean pixeladas
+      imagenesActuales = fotosRepasadas.map(p => {
+        let urlOriginal = p.photo.url;
+        // iNaturalist por defecto da la versión "square". Reemplazamos por "medium"
+        return urlOriginal.replace("square", "medium");
       });
+    }
 
-      marcadorUsuario = L.marker([lat, lng], { icon: usuarioIcon }).addTo(mapa)
-        .bindPopup("<b class='p-2 block text-center text-xs text-pizarra'>¡Estás aquí! 🌲</b>")
-        .openPopup();
+    // Si la API no encontró fotos, usamos una de respaldo para que la app no quede en blanco
+    if (imagenesActuales.length === 0) {
+      imagenesActuales.push("https://images.unsplash.com/photo-1444464666168-49d633b86797?w=600");
+    }
 
-      // Hacemos un zoom cercano hacia el usuario
-      mapa.flyTo([lat, lng], 13, { animate: true, duration: 1.8 });
-    },
-    (error) => {
-      btnUbicacion.textContent = "📍";
-      console.error("Error de GPS: ", error);
-      alert("No se pudo obtener tu ubicación. Asegúrate de activar el GPS y dar permisos a la página.");
-    },
-    { enableHighAccuracy: true, timeout: 7000 }
-  );
+    // Dibujar el carrusel en la interfaz con los resultados reales
+    renderizarCarrusel();
+
+  } catch (error) {
+    console.error(`❌ Error conectando con iNaturalist para ${nombreCientifico}:`, error);
+    imagenesActuales = ["https://images.unsplash.com/photo-1444464666168-49d633b86797?w=600"];
+    renderizarCarrusel();
+  }
+}
+
+// ==========================================
+// 3. RENDERIZADO DEL CARRUSEL EN ADULTO Y NIÑO
+// ==========================================
+function renderizarCarrusel() {
+  const contenedorAdulto = document.getElementById("car-adulto");
+  const contenedorNino = document.getElementById("car-nino");
+  const dotsAdulto = document.getElementById("car-dots-adulto");
+  const dotsNino = document.getElementById("car-dots-nino");
+
+  // Limpiar contenedores
+  if (contenedorAdulto) contenedorAdulto.innerHTML = "";
+  if (contenedorNino) contenedorNino.innerHTML = "";
+  if (dotsAdulto) dotsAdulto.innerHTML = "";
+  if (dotsNino) dotsNino.innerHTML = "";
+
+  // Generar cada slide fotográfico
+  imagenesActuales.forEach((url, index) => {
+    const esActivo = index === idxImagenActual ? "activo" : "";
+
+    // Inyección en Modo Adulto
+    if (contenedorAdulto) {
+      const slideA = document.createElement("div");
+      slideA.className = `car-slide ${esActivo}`;
+      slideA.innerHTML = `<img src="${url}" alt="Foto ${index + 1}" class="w-full h-full object-cover">`;
+      contenedorAdulto.appendChild(slideA);
+
+      const dotA = document.createElement("div");
+      dotA.className = `car-dot ${esActivo}`;
+      dotA.onclick = () => irAImagen(index);
+      dotsAdulto.appendChild(dotA);
+    }
+
+    // Inyección en Modo Niño
+    if (contenedorNino) {
+      const slideN = document.createElement("div");
+      slideN.className = `car-slide ${esActivo}`;
+      slideN.innerHTML = `<img src="${url}" alt="Foto infantil ${index + 1}" class="w-full h-full object-cover">`;
+      contenedorNino.appendChild(slideN);
+
+      const dotN = document.createElement("div");
+      dotN.className = `car-dot ${esActivo}`;
+      dotN.onclick = () => irAImagen(index);
+      dotsNino.appendChild(dotN);
+    }
+  });
+}
+
+// Controles de navegación manual por clicks o flechas (izq/der)
+function carMover(direccion) {
+  if (imagenesActuales.length <= 1) return;
+  
+  idxImagenActual += direccion;
+  if (idxImagenActual >= imagenesActuales.length) idxImagenActual = 0;
+  if (idxImagenActual < 0) idxImagenActual = imagenesActuales.length - 1;
+  
+  actualizarSlidesVisibles();
+}
+
+function irAImagen(index) {
+  idxImagenActual = index;
+  actualizarSlidesVisibles();
+}
+
+function actualizarSlidesVisibles() {
+  // Manejo de clases dinámicas 'activo' para los elementos inyectados
+  const contenedores = ["car-adulto", "car-nino"];
+  contenedores.forEach(id => {
+    const contenedor = document.getElementById(id);
+    if (contenedor) {
+      const slides = contenedor.getElementsByClassName("car-slide");
+      const dots = document.getElementById(id === "car-adulto" ? "car-dots-adulto" : "car-dots-nino").getElementsByClassName("car-dot");
+      
+      for (let i = 0; i < slides.length; i++) {
+        slides[i].classList.remove("activo");
+        if (dots[i]) dots[i].classList.remove("activo");
+      }
+      if (slides[idxImagenActual]) slides[idxImagenActual].classList.add("activo");
+      if (dots[idxImagenActual]) dots[idxImagenActual].classList.add("activo");
+    }
+  });
+}
+
+// ==========================================
+// 4. SELECCIÓN Y CONFIGURACIÓN DEL AVE EN PANTALLA
+// ==========================================
+function seleccionarAve(idAve) {
+  const ave = infoAves.find(a => a.id === idAve);
+  if (!ave) return;
+
+  aveSeleccionada = ave;
+
+  // 1. Actualizar textos e información en la Tarjeta de Adultos
+  document.getElementById("adulto-nombre").innerText = ave.nombreComun || ave.nombre;
+  document.getElementById("adulto-cientifico").innerText = ave.nombreCientifico;
+  document.getElementById("adulto-emoji").innerText = ave.emoji || "🐦";
+  document.getElementById("adulto-habitat").innerText = ave.habitat || "Sin descripción de hábitat disponible.";
+  
+  const badgeZona = document.getElementById("adulto-zona");
+  if (badgeZona) badgeZona.innerText = `📍 ${ave.zona || 'Chile'}`;
+
+  const conservacionTexto = document.getElementById("adulto-conservacion-texto");
+  if (conservacionTexto) conservacionTexto.innerText = ave.conservacion || "Preocupación Menor";
+
+  // 2. Actualizar textos e información en la Tarjeta de Niños
+  document.getElementById("nino-nombre").innerText = ave.nombreComun || ave.nombre;
+  document.getElementById("nino-emoji").innerText = ave.emoji || "🐦";
+  document.getElementById("nino-superpoder").innerText = ave.superpoder || "¡Volar alto y cantar muy fuerte! 🚀";
+  
+  const ninoDato = document.getElementById("nino-dato");
+  if (ninoDato) ninoDato.innerText = ave.datoCurioso || "Le encanta pasear por los cielos chilenos.";
+
+  // 3. LLAMAR A LA API DE iNATURALIST USANDO EL NOMBRE CIENTÍFICO PERFECTO
+  cargarImagenesINaturalist(ave.nombreCientifico);
+}
+
+// Función de marcador de posición para evitar errores si tu código llama al mapa antes de integrarlo por completo
+function inicializarMapaConAves() {
+  console.log("🗺️ Listo para inicializar marcadores del mapa con las 54 aves.");
+  // Aquí va la lógica de tus pines de Leaflet.js mapeando sobre `infoAves`
 }
