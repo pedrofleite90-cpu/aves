@@ -10,7 +10,7 @@ let audioSonando = false;
 let notasTimer = null;
 let vozActiva = false;
 
-// Paginación y Gamificación del Álbum
+// Variables de Control del Álbum Gamificado
 let paginaActualAlbum = 1;
 const avesPorPagina = 10;
 let avesDesbloqueadas = JSON.parse(localStorage.getItem('avesDesbloqueadas')) || [];
@@ -40,7 +40,7 @@ function cargarBaseDeDatos() {
     })
     .catch(err => {
       console.error("Error cargando aves.json: ", err);
-      mostrarToast("🔇 Error al cargar la base de datos", "❌");
+      mostrarToast("Error al cargar la base de datos", "❌");
     });
 }
 
@@ -110,7 +110,7 @@ function seleccionarAve(ave, moverMapa = true) {
   const btnVoz = document.getElementById('btn-voz-nino');
   if (btnVoz) btnVoz.textContent = "🗣️ ¡Háblame del ave!";
 
-  // === INYECCIÓN TEXTOS MODO ADULTO ===
+  // Inyectar datos en tarjetas
   document.getElementById('adulto-emoji').textContent = ave.emoji;
   document.getElementById('adulto-nombre').textContent = ave.nombreComun || ave.nombre;
   document.getElementById('adulto-cientifico').textContent = ave.nombreCientifico;
@@ -118,13 +118,11 @@ function seleccionarAve(ave, moverMapa = true) {
   document.getElementById('adulto-conservacion').textContent = ave.conservacion || "Preocupación Menor";
   document.getElementById('adulto-habitat').textContent = ave.habitat || "Sin especificar.";
 
-  // === INYECCIÓN TEXTOS MODO NIÑO ===
   document.getElementById('nino-emoji').textContent = ave.emoji;
   document.getElementById('nino-nombre').textContent = ave.nombreComun || ave.nombre;
   document.getElementById('nino-superpoder').textContent = ave.superpoder || "¡Volar muy alto! ✨";
-  document.getElementById('nino-curioso').textContent = ave.datoCurioso || "¡Es un ave única de nuestros ecosistemas!";
+  document.getElementById('nino-curioso').textContent = ave.datoCurioso || "¡Es una especie genial!";
 
-  // Actualizar Estado Visual del Botón de Avistamiento
   actualizarBotonAvistamiento();
 
   if (moverMapa && mapa && ave.coordenadasEjemplo) {
@@ -156,11 +154,10 @@ function registrarAvistamientoActual() {
     return;
   }
 
-  // Desbloqueo oficial
   avesDesbloqueadas.push(aveId);
   localStorage.setItem('avesDesbloqueadas', JSON.stringify(avesDesbloqueadas));
 
-  // Animación estallido visual en tarjetas
+  // Animaciones de estallido visual
   const tAdulto = document.getElementById('tarjeta-adulto');
   const tNino = document.getElementById('tarjeta-nino');
   if (tAdulto) { tAdulto.classList.add('animar-desbloqueo'); setTimeout(() => tAdulto.classList.remove('animar-desbloqueo'), 1000); }
@@ -168,7 +165,7 @@ function registrarAvistamientoActual() {
 
   mostrarToast(`¡${aveActual.nombreComun} añadido al álbum!`, "🏆");
   
-  actualProgresoYMedallas();
+  actualizarProgresoYMedallas();
   actualizarBotonAvistamiento();
   renderizarAlbum(aveId);
 }
@@ -185,13 +182,9 @@ function actualizarProgresoYMedallas() {
   if (porcentaje >= 75 && porcentaje < 100) rango = "🦉 Búho (Experto)";
   if (porcentaje === 100) rango = "👑 ¡Cóndor Supremo! 🇨🇱";
 
-  const elConteo = document.getElementById('txt-progreso-conteo');
-  const elMedalla = document.getElementById('txt-medalla-rango');
-  const elBarra = document.getElementById('barra-progreso-llenado');
-
-  if (elConteo) elConteo.textContent = `🏆 Descubiertas: ${descubiertas} / ${total} (${porcentaje}%)`;
-  if (elMedalla) elMedalla.textContent = rango;
-  if (elBarra) elBarra.style.width = `${porcentaje}%`;
+  document.getElementById('txt-progreso-conteo').textContent = `🏆 Descubiertas: ${descubiertas} / ${total} (${porcentaje}%)`;
+  document.getElementById('txt-medalla-rango').textContent = rango;
+  document.getElementById('barra-progreso-llenado').style.width = `${porcentaje}%`;
 }
 
 function renderizarAlbum(idNueva = null) {
@@ -230,9 +223,7 @@ function renderizarAlbum(idNueva = null) {
   });
 
   const totalPaginas = Math.ceil(aves.length / avesPorPagina) || 1;
-  const txtPag = document.getElementById('txt-paginacion');
-  if(txtPag) txtPag.textContent = `Página ${paginaActualAlbum} de ${totalPaginas}`;
-  
+  document.getElementById('txt-paginacion').textContent = `Página ${paginaActualAlbum} de ${totalPaginas}`;
   document.getElementById('btn-pag-ant').disabled = paginaActualAlbum === 1;
   document.getElementById('btn-pag-sig').disabled = paginaActualAlbum === totalPaginas;
 }
@@ -250,7 +241,7 @@ function seleccionarAvePorId(id) {
   }
 }
 
-// LÓGICA DE AUDIOS, REPRODUCTOR Y NOTAS MUSICALES FLOTANTES
+// CONTROL DE AUDIOS Y ELEMENTOS DE ADORNO
 function toggleAudio() {
   if (!aveActual || !aveActual.sonidoUrl) {
     mostrarToast("Canto no disponible para esta especie", "🔇");
@@ -287,15 +278,10 @@ function detenerAudio() {
   clearInterval(notasTimer);
   document.querySelectorAll('.btn-audio').forEach(btn => btn.classList.remove('sonando'));
   
-  const iconA = document.getElementById('audio-icon-a');
-  const lblA = document.getElementById('audio-lbl-a');
-  const iconN = document.getElementById('audio-icon-n');
-  const lblN = document.getElementById('audio-lbl-n');
-
-  if (iconA) iconA.textContent = '🔊';
-  if (lblA) lblA.textContent = 'Escuchar Canto Real';
-  if (iconN) iconN.textContent = '🎵';
-  if (lblN) lblN.textContent = '¡Escuchar Pajarito!';
+  if (document.getElementById('audio-icon-a')) document.getElementById('audio-icon-a').textContent = '🔊';
+  if (document.getElementById('audio-lbl-a')) document.getElementById('audio-lbl-a').textContent = 'Escuchar Canto Real';
+  if (document.getElementById('audio-icon-n')) document.getElementById('audio-icon-n').textContent = '🎵';
+  if (document.getElementById('audio-lbl-n')) document.getElementById('audio-lbl-n').textContent = '¡Escuchar Pajarito!';
 }
 
 function lanzarNotas() {
@@ -343,7 +329,6 @@ function toggleVoz() {
   }
 }
 
-// CONTROL DE MODOS INTERFAZ
 function toggleModo() {
   modoAdulto = !modoAdulto;
   const tAdulto = document.getElementById('tarjeta-adulto');
@@ -364,7 +349,6 @@ function toggleModo() {
   }
 }
 
-// ELEMENTO TOAST CUSTOM DE NOTIFICACIONES
 function mostrarToast(msg, icono = "✨") {
   const toast = document.getElementById('toast');
   const tIcon = document.getElementById('toast-icon');
@@ -375,12 +359,9 @@ function mostrarToast(msg, icono = "✨") {
   tMsg.textContent = msg;
 
   toast.classList.add('ver');
-  setTimeout(() => {
-    toast.classList.remove('ver');
-  }, 2800);
+  setTimeout(() => { toast.classList.remove('ver'); }, 2800);
 }
 
-// GPS UBICACIÓN USUARIO
 function centrarMiUbicacion() {
   if (!navigator.geolocation) {
     mostrarToast("Tu navegador no soporta GPS", "📍");
