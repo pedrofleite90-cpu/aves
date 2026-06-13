@@ -31,16 +31,48 @@ function cargarBaseDeDatos() {
     .catch(err => console.error("Error cargando aves.json: ", err));
 }
 
+// Generador de coordenadas simuladas a lo largo de Chile basadas en la zona para evitar que se amontonen
+function obtenerCoordenadasPorZona(ave) {
+  if (ave.coordenadasEjemplo) return ave.coordenadasEjemplo;
+  
+  // Base de latitudes aproximadas en Chile por zona
+  let lat = -33.4489; 
+  let lng = -70.6693;
+  
+  const zona = ave.zona.toLowerCase();
+  if (zona.includes("norte") || zona.includes("altiplano")) {
+    lat = -22.0 - (ave.id * 0.15);
+    lng = -68.5 - (ave.id % 3 * 0.1);
+  } else if (zona.includes("sur") || zona.includes("patagonia") || zona.includes("austral")) {
+    lat = -42.0 - (ave.id * 0.12);
+    lng = -72.5 - (ave.id % 3 * 0.1);
+  } else if (zona.includes("juan fernández")) {
+    lat = -33.6350;
+    lng = -78.8319 + (ave.id * 0.01);
+  } else { // Centro / Todo Chile
+    lat = -32.0 - (ave.id * 0.18);
+    lng = -71.0 - (ave.id % 3 * 0.08);
+  }
+  return [lat, lng];
+}
+
 function initMapa() {
-  mapa = L.map('map').setView([-33.4489, -70.6693], 6);
+  // Centrado inicial en el centro-sur de Chile con zoom apto para móviles y escritorio
+  mapa = L.map('map').setView([-38.0000, -72.0000], 5);
   
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
   }).addTo(mapa);
 
   aves.forEach(ave => {
+    // Asignamos coordenadas calculadas dinámicamente si no existen
+    ave.coordenadasEjemplo = obtenerCoordenadasPorZona(ave);
+
+    // Color por defecto si no viene especificado en el JSON
+    const colorPin = ave.pinColor || '#1E8449'; 
+    
     const pinHtml = `
-      <div class="ave-pin" style="background:${ave.pinColor};">
+      <div class="ave-pin" style="background:${colorPin};">
         <span class="ave-pin-emoji">${ave.emoji}</span>
       </div>
     `;
@@ -60,7 +92,6 @@ function initMapa() {
   });
 }
 
-// moverMapa es un interruptor. Si es true, el mapa "vuela" hacia el ave.
 function seleccionarAve(ave, moverMapa = true) {
   aveActual = ave;
   
@@ -68,13 +99,13 @@ function seleccionarAve(ave, moverMapa = true) {
   document.getElementById('adulto-emoji').textContent = ave.emoji;
   document.getElementById('adulto-nombre').textContent = ave.nombreComun;
   document.getElementById('adulto-cientifico').textContent = ave.nombreCientifico;
-  document.getElementById('adulto-habitat').textContent = ave.datosAdulto.habitat;
-  document.getElementById('adulto-conservacion').textContent = ave.datosAdulto.estadoConservacion;
+  document.getElementById('adulto-habitat').textContent = ave.habitat;
+  document.getElementById('adulto-conservacion').textContent = ave.conservacion;
 
   // Elementos Niño
   document.getElementById('nino-emoji').textContent = ave.emoji;
   document.getElementById('nino-nombre').textContent = ave.nombreComun;
-  document.getElementById('nino-superpoder').textContent = ave.datosNino.superpoder;
+  document.getElementById('nino-superpoder').textContent = ave.superpoder;
 
   // Reseteo de sonidos y voces activas
   if(audioObjeto) { audioObjeto.pause(); audioObjeto = null; }
@@ -83,11 +114,11 @@ function seleccionarAve(ave, moverMapa = true) {
   vozActiva = false;
   document.getElementById('btn-voz-nino').textContent = "🐦 ¡Háblame!";
 
-  // NUEVO: Efecto de auto-zoom y vuelo dinámico en el mapa
-  if (moverMapa && mapa) {
-    mapa.flyTo(ave.coordenadasEjemplo, 9, {
+  // Efecto de auto-zoom y vuelo dinámico en el mapa
+  if (moverMapa && mapa && ave.coordenadasEjemplo) {
+    mapa.flyTo(ave.coordenadasEjemplo, 8, {
       animate: true,
-      duration: 1.5 // Duración del vuelo en segundos
+      duration: 1.5 
     });
   }
 
@@ -104,8 +135,9 @@ function obtenerFotosINaturalist(nombreCientifico) {
   fetch(`https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(nombreCientifico)}&per_page=1`)
     .then(res => res.json())
     .then(data => {
-      if(data.results && data.results.length > 0 && data.results[0].taxon_photos) {
-        fotosActuales = data.results[0].taxon_photos.slice(0, 5).map(p => p.photo.medium_url);
+      // Limitamos estrictamente a un máximo de 3 imágenes reales
+      if(data.results && data.results.length > 0 && data.results[0].taxon_photos && data.results[0].taxon_photos.length > 0) {
+        fotosActuales = data.results[0].taxon_photos.slice(0, 3).map(p => p.photo.medium_url);
       } else {
         fotosActuales = ["https://images.unsplash.com/photo-1484557052118-f32bd25b45b5?w=500"];
       }
@@ -163,7 +195,7 @@ function renderizarAlbum() {
   avesPagina.forEach(ave => {
     grid.innerHTML += `
       <div class="border border-gray-100 p-3 rounded-xl text-center bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors" 
-           onclick="event.stopPropagation(); seleccionarAvePorId('${ave.id}')">
+           onclick="event.stopPropagation(); seleccionarAvePorId(${ave.id})">
         <div class="text-3xl mb-1">${ave.emoji}</div>
         <div class="font-black text-sm text-pizarra">${ave.nombreComun}</div>
         <div class="text-xs text-pizarra/50 italic">${ave.nombreCientifico}</div>
@@ -183,9 +215,10 @@ function cambiarPaginaAlbum(direccion) {
 }
 
 function seleccionarAvePorId(id) {
-  const encontrado = aves.find(a => a.id === id);
+  // Los IDs en tu JSON son de tipo numérico
+  const encontrado = aves.find(a => a.id === Number(id));
   if(encontrado) {
-    seleccionarAve(encontrado, true); // Activa el vuelo del mapa hacia el ave seleccionada
+    seleccionarAve(encontrado, true); 
     document.getElementById('app-header').scrollIntoView({ behavior: 'smooth' });
   }
 }
@@ -209,7 +242,10 @@ function toggleModo() {
 }
 
 function toggleAudio() {
-  if(!aveActual || !aveActual.sonidoUrl) return;
+  if(!aveActual || !aveActual.sonidoUrl) {
+    alert("Canto no disponible para esta especie en este momento.");
+    return;
+  }
   const btn = document.getElementById('btn-audio-a');
   if(audioObjeto && !audioObjeto.paused) {
     audioObjeto.pause();
@@ -237,7 +273,10 @@ function toggleVoz() {
     vozActiva = false;
     btn.textContent = "🐦 ¡Háblame!";
   } else {
-    const texto = `${aveActual.fraseNino}. ¡Mi superpoder es: ${aveActual.datosNino.superpoder}!`;
+    // Usamos datoCurioso en lugar de fraseNino que no está en el JSON
+    const textoInformativo = aveActual.datoCurioso || "¡Soy un ave fantástica de Chile!";
+    const texto = `¡Hola! Soy el ${aveActual.nombreComun}. ${textoInformativo} ¡Mi superpoder es: ${aveActual.superpoder}!`;
+    
     const ut = new SpeechSynthesisUtterance(texto);
     ut.lang = 'es-CL';
     ut.onend = () => {
@@ -250,14 +289,12 @@ function toggleVoz() {
   }
 }
 
-// NUEVA FUNCIÓN: Geolocalización GPS Real por Navegador
 function centrarMiUbicacion() {
   if (!navigator.geolocation) {
     alert("Tu navegador o teléfono no soporta la geolocalización.");
     return;
   }
 
-  // Cambiamos el estado visual del botón para avisar que está buscando
   const btnUbicacion = document.getElementById('btn-ubicacion');
   btnUbicacion.textContent = "⏳";
 
@@ -266,15 +303,12 @@ function centrarMiUbicacion() {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
 
-      // Volver a colocar el emoji original
       btnUbicacion.textContent = "📍";
 
-      // Si ya existía un pin de usuario previo, lo removemos para no duplicar
       if (marcadorUsuario) {
         mapa.removeLayer(marcadorUsuario);
       }
 
-      // Creamos un pin especial de color azul brillante para el usuario
       const usuarioIcon = L.divIcon({
         html: `<div style="background:#2980B9; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(0,0,0,0.4);"></div>`,
         className: '',
@@ -286,7 +320,6 @@ function centrarMiUbicacion() {
         .bindPopup("<b class='p-2 block text-center text-xs text-pizarra'>¡Estás aquí! 🌲</b>")
         .openPopup();
 
-      // Hacemos un zoom cercano hacia el usuario
       mapa.flyTo([lat, lng], 13, { animate: true, duration: 1.8 });
     },
     (error) => {
