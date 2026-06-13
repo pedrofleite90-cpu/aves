@@ -13,8 +13,32 @@ const avesPorPagina = 10;
 let avesDesbloqueadas = JSON.parse(localStorage.getItem('avesDesbloqueadas')) || [];
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Insertamos los estilos CSS para las animaciones directamente
+  inyectarEstilosAnimacion();
   cargarBaseDeDatos();
 });
+
+// FUNCIÓN NUEVA: Inyecta CSS de animaciones para que todo brille al desbloquear
+function inyectarEstilosAnimacion() {
+  const style = document.createElement('style');
+  style.innerHTML = `
+    @keyframes estallido {
+      0% { transform: scale(1); filter: brightness(1); }
+      50% { transform: scale(1.08); filter: brightness(1.3); box-shadow: 0 0 25px rgba(247, 220, 111, 0.6); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+    .animar-desbloqueo {
+      animation: estallido 0.6s ease-in-out 2;
+    }
+    .tarjeta-bloqueada-estilo {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .ave-desbloqueada-item {
+      animation: estallido 0.5s ease-out 1;
+    }
+  `;
+  document.head.appendChild(style);
+}
 
 function cargarBaseDeDatos() {
   fetch('aves.json')
@@ -25,12 +49,10 @@ function cargarBaseDeDatos() {
       const txtContador = document.getElementById('contador-aves');
       if (txtContador) txtContador.textContent = `🐦 ${aves.length} aves`;
       
-      // Inicializaciones principales
       initMapa();
-      actualizarProgresoYMedallas(); // Calcula barra y medalla antes de renderizar
+      actualizarProgresoYMedallas(); 
       renderizarAlbum(); 
       
-      // Seleccionamos la primera ave por defecto asegurando que el DOM esté listo
       if(aves.length > 0) {
         setTimeout(() => {
           seleccionarAve(aves[0], false);
@@ -40,7 +62,6 @@ function cargarBaseDeDatos() {
     .catch(err => console.error("Error cargando aves.json: ", err));
 }
 
-// Distribución de coordenadas por zonas geográficas de Chile
 function obtenerCoordenadasPorZona(ave) {
   if (ave.coordenadasEjemplo) return ave.coordenadasEjemplo;
   
@@ -98,8 +119,6 @@ function initMapa() {
     const marker = L.marker(ave.coordenadasEjemplo, { icon: customIcon }).addTo(mapa);
     
     marker.on('click', () => {
-      // Al pulsar sobre el pin en el mapa, automáticamente la desbloqueamos
-      desbloquearAve(ave.id);
       seleccionarAve(ave, true); 
     });
   });
@@ -131,7 +150,7 @@ function seleccionarAve(ave, moverMapa = true) {
   if (elNinoNombre) elNinoNombre.textContent = ave.nombreComun || ave.nombre;
   if (elNinoSuperpoder) elNinoSuperpoder.textContent = ave.superpoder || "¡Ser un ave genial! ✨";
 
-  // Control e interrupción de audios anteriores
+  // Control de reproducción de audios anteriores
   if(audioObjeto) { audioObjeto.pause(); audioObjeto = null; }
   const btnAudioA = document.getElementById('btn-audio-a');
   if (btnAudioA) btnAudioA.textContent = "🔊 Escuchar Canto";
@@ -141,64 +160,101 @@ function seleccionarAve(ave, moverMapa = true) {
   const btnVozNino = document.getElementById('btn-voz-nino');
   if (btnVozNino) btnVozNino.textContent = "🐦 ¡Háblame!";
 
+  // ACTUALIZAR O CREAR EL BOTÓN DE DESBLOQUEO DE FORMA DINÁMICA
+  actualizarBotonDesbloqueoDinamico();
+
   if (moverMapa && mapa && ave.coordenadasEjemplo) {
     mapa.flyTo(ave.coordenadasEjemplo, 7, { animate: true, duration: 1.2 });
   }
 }
 
-// LÓGICA DE JUEGO: DESBLOQUEAR AVES Y CONTROLAR LOCALSTORAGE
+// FUNCIÓN NUEVA: Dibuja y gestiona el botón de registrar avistamiento en tiempo real
+function actualizarBotonDesbloqueoDinamico() {
+  // Buscamos un contenedor común en las tarjetas para inyectar el botón
+  let btnRegistro = document.getElementById('btn-registro-manual-ave');
+  
+  if (!btnRegistro) {
+    // Si no existe, lo insertamos justo arriba de los datos descriptivos de la tarjeta
+    const contenedorTabs = document.querySelector('.tab-panel') || document.getElementById('tarjeta-adulto');
+    if (contenedorTabs) {
+      btnRegistro = document.createElement('button');
+      btnRegistro.id = 'btn-registro-manual-ave';
+      contenedorTabs.insertBefore(btnRegistro, contenedorTabs.firstChild);
+    }
+  }
+
+  if (!btnRegistro || !aveActual) return;
+
+  const estaDesbloqueada = avesDesbloqueadas.includes(Number(aveActual.id));
+
+  if (estaDesbloqueada) {
+    btnRegistro.className = "w-full mb-4 bg-gradient-to-r from-bosque to-hoja text-white font-black py-3 px-4 rounded-xl text-sm shadow-sm flex items-center justify-center gap-2 border border-bosque/20 cursor-default uppercase tracking-wider";
+    btnRegistro.innerHTML = "<span>✅ ¡Especie Avistada y Coleccionada!</span>";
+    btnRegistro.onclick = null; 
+  } else {
+    btnRegistro.className = "w-full mb-4 bg-gradient-to-r from-sol to-amber-500 hover:from-amber-500 hover:to-sol text-pizarra font-black py-3 px-4 rounded-xl text-sm shadow-md flex items-center justify-center gap-2 border border-sol animate-pulse transition-all transform hover:scale-[1.02]";
+    btnRegistro.innerHTML = "<span>📸 Registrar Avistamiento ✨</span>";
+    btnRegistro.onclick = () => {
+      desbloquearAve(aveActual.id);
+    };
+  }
+}
+
+// LÓGICA DE JUEGO: DESBLOQUEAR AVES CON ANIMACIÓN SÚPER VISUAL
 function desbloquearAve(id) {
   const aveId = Number(id);
   if (!avesDesbloqueadas.includes(aveId)) {
     avesDesbloqueadas.push(aveId);
     localStorage.setItem('avesDesbloqueadas', JSON.stringify(avesDesbloqueadas));
     
-    // Actualizamos la interfaz al vuelo
+    // 1. Agregar efectos y clases de animación a las tarjetas principales
+    const tAdulto = document.getElementById('tarjeta-adulto');
+    const tNino = document.getElementById('tarjeta-nino');
+    
+    if (tAdulto) { tAdulto.classList.add('animar-desbloqueo'); setTimeout(() => tAdulto.classList.remove('animar-desbloqueo'), 1200); }
+    if (tNino) { tNino.classList.add('animar-desbloqueo'); setTimeout(() => tNino.classList.remove('animar-desbloqueo'), 1200); }
+
+    // 2. Refrescar los elementos de gamificación en el acto
     actualizarProgresoYMedallas();
-    renderizarAlbum();
+    actualizarBotonDesbloqueoDinamico();
+    renderizarAlbum(aveId); // Pasamos el ID para animar su aparición en el álbum
   }
 }
 
 function actualizarProgresoYMedallas() {
   if (aves.length === 0) return;
   
-  // Calcular porcentaje de colección
   const totalAves = aves.length;
   const totalDesbloqueadas = avesDesbloqueadas.length;
   const porcentaje = Math.round((totalDesbloqueadas / totalAves) * 100);
 
-  // Inyectar dinámicamente o actualizar la Barra de Progreso si existe un contenedor
-  // Si no existe en el index básico, lo inyectamos de manera flotante o sobre el álbum.
-  let contenedorProgreso = document.getElementById('progreso-coleccion');
+  let contenedorProgreso = document.getElementById('progreso-wrapper');
   
   if (!contenedorProgreso) {
-    // Si tu index.html no tiene la barra maquetada, la creamos dinámicamente arriba del álbum
     const albumGrid = document.getElementById('album-grid');
     if (albumGrid && albumGrid.parentNode) {
-      const wrapper = document.createElement('div');
-      wrapper.id = 'progreso-wrapper';
-      wrapper.className = 'mb-4 bg-gray-50 border border-gray-100 p-4 rounded-xl flex flex-col gap-2';
-      wrapper.innerHTML = `
+      contenedorProgreso = document.createElement('div');
+      contenedorProgreso.id = 'progreso-wrapper';
+      contenedorProgreso.className = 'mb-4 bg-white border border-gray-100 p-4 rounded-xl flex flex-col gap-2 shadow-sm';
+      contenedorProgreso.innerHTML = `
         <div class="flex items-center justify-between font-black text-xs text-pizarra tracking-wider uppercase">
           <span id="txt-progreso-conteo">🏆 Descubiertas: 0 / 0</span>
-          <span id="txt-medalla-rango" class="text-lg">🥚 Huevo</span>
+          <span id="txt-medalla-rango" class="text-xs bg-sol/20 text-tierra px-2 py-1 rounded-md font-black">🥚 Huevo</span>
         </div>
-        <div class="w-full bg-gray-200 h-3 rounded-full overflow-hidden">
-          <div id="barra-progreso-llenado" class="bg-gradient-to-r from-bosque to-hoja h-full transition-all duration-500" style="width: 0%"></div>
+        <div class="w-full bg-gray-100 h-3 rounded-full overflow-hidden border border-gray-200">
+          <div id="barra-progreso-llenado" class="bg-gradient-to-r from-bosque via-hoja to-sol h-full transition-all duration-700" style="width: 0%"></div>
         </div>
       `;
-      albumGrid.parentNode.insertBefore(wrapper, albumGrid);
+      albumGrid.parentNode.insertBefore(contenedorProgreso, albumGrid);
     }
   }
 
-  // Determinar Rango y Medalla según porcentaje de éxito
   let medalla = "🥚 Explorador Principiante (Huevo)";
   if (porcentaje >= 25 && porcentaje < 50) medalla = "🐥 Observador Junior (Pichón)";
   if (porcentaje >= 50 && porcentaje < 75) medalla = "🦅 Guardián del Aire (Halcón)";
-  if (porcentaje >= 75 && porcentaje < 100) medalla = "🦉 Sabio de la Naturaleza (Búho)";
-  if (porcentaje === 100) medalla = "👑 ¡Gran Cóndor Supremo de Chile! 🇨🇱";
+  if (porcentaje >= 75 && porcentaje < 100) medalla = "🇺🇦 Sabio del Bosque (Búho)";
+  if (porcentaje === 100) medalla = "👑 ¡Cóndor Supremo de Chile! 🇨🇱";
 
-  // Actualizar los elementos visuales de progreso
   const elConteo = document.getElementById('txt-progreso-conteo');
   const elMedalla = document.getElementById('txt-medalla-rango');
   const elBarra = document.getElementById('barra-progreso-llenado');
@@ -208,8 +264,8 @@ function actualizarProgresoYMedallas() {
   if (elBarra) elBarra.style.width = `${porcentaje}%`;
 }
 
-// RENDERIZAR EL ÁLBUM MOSTRANDO CANDADOS Y ESTADOS DE DESBLOQUEO
-function renderizarAlbum() {
+// RENDERIZAR EL ÁLBUM CON CONTROL DE EFECTOS PARA EL AVE RECIÉN DESCUBIERTA
+function renderizarAlbum(idRecienDesbloqueado = null) {
   const grid = document.getElementById('album-grid');
   if(!grid) return;
   grid.innerHTML = "";
@@ -220,26 +276,26 @@ function renderizarAlbum() {
 
   avesPagina.forEach(ave => {
     const estaDesbloqueada = avesDesbloqueadas.includes(Number(ave.id));
-    
+    const esLaNueva = Number(ave.id) === Number(idRecienDesbloqueado);
+    const claseAnimacion = esLaNueva ? 'ave-desbloqueada-item border-2 border-sol' : 'border border-gray-100 bg-white';
+
     if (estaDesbloqueada) {
-      // Tarjeta Normal a Color para el Ave Desbloqueada
       grid.innerHTML += `
-        <div class="border-2 border-hoja/30 p-3 rounded-xl text-center bg-white shadow-sm hover:shadow hover:bg-gray-50 cursor-pointer transition-all" 
+        <div class="p-3 rounded-xl text-center shadow-sm hover:shadow hover:bg-gray-50 cursor-pointer transition-all transform hover:scale-[1.03] ${claseAnimacion}" 
              onclick="event.stopPropagation(); seleccionarAvePorId(${ave.id})">
           <div class="text-3xl mb-1">${ave.emoji}</div>
           <div class="font-black text-sm text-pizarra">${ave.nombreComun || ave.nombre}</div>
-          <div class="text-xs text-bosque font-bold uppercase tracking-widest" style="font-size: 9px;">✨ Avistada</div>
+          <div class="text-xs text-bosque font-extrabold uppercase tracking-widest mt-1" style="font-size: 9px;">✨ Descubierta</div>
         </div>
       `;
     } else {
-      // Tarjeta Oscurecida con Candado para el Ave Bloqueada
       grid.innerHTML += `
-        <div class="border border-gray-200 p-3 rounded-xl text-center bg-gray-100 opacity-60 filter grayscale cursor-not-allowed select-none transition-all relative group"
-             onclick="event.stopPropagation(); alert('¡Explora el mapa y pulsa su pin para desbloquear esta especie! 🗺️')">
-          <div class="absolute top-2 right-2 text-xs opacity-40">🔒</div>
-          <div class="text-3xl mb-1 filter blur-[1px]">❓</div>
-          <div class="font-bold text-sm text-gray-400 italic">Incógnita</div>
-          <div class="text-pizarra/40 tracking-tighter" style="font-size: 10px;">Zona: ${ave.zona}</div>
+        <div class="border border-gray-200 p-3 rounded-xl text-center bg-gray-100 opacity-60 filter grayscale cursor-not-allowed select-none tarjeta-bloqueada-estilo relative"
+             onclick="event.stopPropagation(); alert('¡Haz clic sobre el pin de este ave en el mapa para registrarla! 🗺️')">
+          <div class="absolute top-1 right-2 text-[10px] opacity-40">🔒</div>
+          <div class="text-3xl mb-1 filter blur-[2px]">❓</div>
+          <div class="font-bold text-xs text-gray-400 italic">Incógnita</div>
+          <div class="text-pizarra/40 font-bold tracking-tighter mt-1" style="font-size: 8px; text-transform: uppercase;">Zona: ${ave.zona}</div>
         </div>
       `;
     }
@@ -354,7 +410,7 @@ function centrarMiUbicacion() {
       }
 
       const usuarioIcon = L.divIcon({
-        html: `<div style="background:#2980B9; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(0,0,0,0.4);"></div>`,
+        html: `<div style="background:#2980B9; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(0,0,0,0.4);\"></div>`,
         className: '',
         iconSize: [20, 20],
         iconAnchor: [10, 10]
