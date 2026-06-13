@@ -595,77 +595,37 @@
 // ══════════════════════════════════════════════
 // BASE DE DATOS AVES
 // ══════════════════════════════════════════════
-const avesData = [
-  { id:"ave-001", nombreComun:"Zorzal", nombreCientifico:"Turdus falcklandii", zona:"Centro-Sur", emoji:"🐦", pinColor:"#784212",
-    imagenes:["https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Turdus_falcklandii_-Zapallar%2C_Valparaiso%2C_Chile_-adult-8.jpg/640px-Turdus_falcklandii_-Zapallar%2C_Valparaiso%2C_Chile_-adult-8.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Zorzal_chileno.jpg/640px-Zorzal_chileno.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Turdus_falcklandii_chile.jpg/640px-Turdus_falcklandii_chile.jpg"],
-    sonidoUrl:"https://upload.wikimedia.org/wikipedia/commons/4/4c/Turdus_falcklandii.mp3",
-    datosAdulto:{ habitat:"Bosques nativos, jardines urbanos, parques y zonas rurales con vegetación densa. Se adapta bien a ambientes periurbanos.", estadoConservacion:"Preocupación Menor (LC) — IUCN", mesesAvistamiento:["Ago","Sep","Oct","Nov","Dic"] },
-    datosNino:{ superpoder:"¡Tiene un canto tan hermoso que puede aprender nuevas canciones escuchando a otros pájaros, como si fuera un DJ de la naturaleza!", datoCurioso:"¡Puede escuchar a las lombrices moverse bajo el suelo y las saca con su pico!", colorPrincipal:"#D2691E", medallaNombre:"El Gran Cantor" },
-    coordenadasEjemplo:[-33.4489,-70.6693] },
+// Variable global para almacenar las aves
+let aves = [];
 
-  { id:"ave-002", nombreComun:"Queltehue", nombreCientifico:"Vanellus chilensis", zona:"Centro", emoji:"🪶", pinColor:"#228B22",
-    imagenes:["https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Southern_lapwing_-_nesting_edit.jpg/640px-Southern_lapwing_-_nesting_edit.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Southern_lapwing_arp.jpg/640px-Southern_lapwing_arp.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Vanellus_chilensis_-_Southern_Lapwing.jpg/640px-Vanellus_chilensis_-_Southern_Lapwing.jpg"],
-    sonidoUrl:"https://upload.wikimedia.org/wikipedia/commons/9/9b/Vanellus_chilensis_sound.ogg",
-    datosAdulto:{ habitat:"Praderas abiertas, orillas de ríos y lagos, campos agrícolas, bordes de caminos y parques urbanos con césped corto.", estadoConservacion:"Preocupación Menor (LC) — IUCN", mesesAvistamiento:["Sep","Oct","Nov","Dic","Ene"] },
-    datosNino:{ superpoder:"¡Es el guardián del campo! Cuando detecta peligro, grita tan fuerte que alerta a todos los animales cercanos.", datoCurioso:"Tiene espuelas escondidas en sus alas para defender su nido. ¡Un superhéroe con armas secretas!", colorPrincipal:"#228B22", medallaNombre:"El Guardián Valiente" },
-    coordenadasEjemplo:[-33.5614,-70.6506] },
+// Función para cargar los datos desde el archivo aves.json
+function cargarBaseDeDatos() {
+  // Añadimos ?t=${new Date().getTime()} para evitar que el navegador guarde en caché una versión antigua
+  fetch('aves.json?t=' + new Date().getTime())
+    .then(response => {
+      if (!response.ok) throw new Error("No se pudo cargar el archivo aves.json");
+      return response.json();
+    })
+    .then(data => {
+      aves = data;
+      console.log("¡Éxito! Aves cargadas:", aves.length);
+      
+      // Actualizar la interfaz visualmente
+      document.getElementById('contador-aves').textContent = `🐦 ${aves.length} aves`;
+      
+      // Inicializar el resto de la app
+      initMapa();
+      renderizarAlbum(); 
+    })
+    .catch(err => {
+      console.error("Error al cargar las aves:", err);
+    });
+}
 
-  { id:"ave-003", nombreComun:"Loica", nombreCientifico:"Leistes loyca", zona:"Centro-Sur", emoji:"🔴", pinColor:"#DC143C",
-    imagenes:["https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Leistes_loyca_-Vina_del_Mar%2C_Valparaiso%2C_Chile_-male-8.jpg/640px-Leistes_loyca_-Vina_del_Mar%2C_Valparaiso%2C_Chile_-male-8.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Loica_macho.jpg/640px-Loica_macho.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Leistes_loyca_female.jpg/640px-Leistes_loyca_female.jpg"],
-    sonidoUrl:"https://upload.wikimedia.org/wikipedia/commons/3/36/Leistes_loyca_song.mp3",
-    datosAdulto:{ habitat:"Pastizales abiertos, campos agrícolas, praderas andinas y costeras. Prefiere terrenos planos con vegetación herbácea baja.", estadoConservacion:"Preocupación Menor (LC) — IUCN", mesesAvistamiento:["Jul","Ago","Sep","Oct","Nov"] },
-    datosNino:{ superpoder:"¡La Loica lleva el corazón en el pecho! Su rojo brillante es como una llama que nunca se apaga, símbolo de valentía.", datoCurioso:"Es tan querida en Chile que aparece en canciones y poesías. ¡Es la estrella de rock de los pájaros chilenos!", colorPrincipal:"#DC143C", medallaNombre:"La Guerrera Roja" },
-    coordenadasEjemplo:[-34.1708,-71.5994] },
-
-  { id:"ave-004", nombreComun:"Siete Colores", nombreCientifico:"Tachuris rubrigastra", zona:"Centro-Sur", emoji:"🌈", pinColor:"#DAA520",
-    imagenes:["https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Tachuris_rubrigastra_male.jpg/640px-Tachuris_rubrigastra_male.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Tachuris_rubrigastra_-_Many-colored_Rush-Tyrant.jpg/640px-Tachuris_rubrigastra_-_Many-colored_Rush-Tyrant.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Many-colored_rush-tyrant_%28Tachuris_rubrigastra%29.jpg/640px-Many-colored_rush-tyrant_%28Tachuris_rubrigastra%29.jpg"],
-    sonidoUrl:"https://upload.wikimedia.org/wikipedia/commons/0/0e/Tachuris_rubrigastra_-_call.ogg",
-    datosAdulto:{ habitat:"Totorales y juncales en bordes de lagunas, humedales y ríos de lento fluir. Muy dependiente de la vegetación palustre densa.", estadoConservacion:"Preocupación Menor (LC) — IUCN", mesesAvistamiento:["Oct","Nov","Dic","Ene","Feb"] },
-    datosNino:{ superpoder:"¡Es el pájaro arcoíris de Chile! Tiene exactamente 7 colores en sus plumas, como si se hubiera pintado con todos los marcadores.", datoCurioso:"¡Pesa menos que una cucharadita de azúcar y puede pararse en una ramita de totora sin doblarla!", colorPrincipal:"#FFD700", medallaNombre:"El Arcoíris Viviente" },
-    coordenadasEjemplo:[-36.8201,-73.0444] },
-
-  { id:"ave-005", nombreComun:"Cóndor Andino", nombreCientifico:"Vultur gryphus", zona:"Cordillera Andes", emoji:"🦅", pinColor:"#1C1C1C",
-    imagenes:["https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Condor_-_Nationalpark_Conguillo.jpg/640px-Condor_-_Nationalpark_Conguillo.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Condor_in_flight_over_Colca_Canyon.JPG/640px-Condor_in_flight_over_Colca_Canyon.JPG","https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Condor_head.jpg/640px-Condor_head.jpg"],
-    sonidoUrl:"https://upload.wikimedia.org/wikipedia/commons/2/2b/Vultur_gryphus_-_sound.ogg",
-    datosAdulto:{ habitat:"Zonas montañosas y cordilleranas, acantilados costeros y estepas patagónicas. Nidifica en cornisas rocosas inaccesibles.", estadoConservacion:"⚠️ Vulnerable (VU) — IUCN", mesesAvistamiento:["Ene","Feb","Mar","Nov","Dic"] },
-    datosNino:{ superpoder:"¡Puede volar a 5.000 metros de altura sin cansarse! Sus alas enormes atrapan el viento y lo hacen el rey del cielo andino.", datoCurioso:"¡Es tan grande que los pilotos de avión a veces lo ven desde la ventanilla! Puede planear horas sin mover las alas.", colorPrincipal:"#1C1C1C", medallaNombre:"El Rey de los Andes" },
-    coordenadasEjemplo:[-30.0895,-70.0117] },
-
-  { id:"ave-006", nombreComun:"Pingüino Humboldt", nombreCientifico:"Spheniscus humboldti", zona:"Norte-Centro Costa", emoji:"🐧", pinColor:"#2F4F4F",
-    imagenes:["https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Spheniscus_humboldti20071204.jpg/640px-Spheniscus_humboldti20071204.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Humboldt_Penguin_Osaka_Aquarium.jpg/640px-Humboldt_Penguin_Osaka_Aquarium.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Ping%C3%BCino_de_Humboldt_Isla_Cachagua.jpg/640px-Ping%C3%BCino_de_Humboldt_Isla_Cachagua.jpg"],
-    sonidoUrl:"https://upload.wikimedia.org/wikipedia/commons/d/d1/Spheniscus_humboldti_-call.ogg",
-    datosAdulto:{ habitat:"Costas rocosas del Pacífico, islas guaneras y acantilados. Nidifica en cuevas o bajo rocas en islas e islotes.", estadoConservacion:"⚠️ Vulnerable (VU) — IUCN", mesesAvistamiento:["May","Jun","Jul","Ago","Sep"] },
-    datosNino:{ superpoder:"¡Es un nadador olímpico! Bajo el agua nada más rápido que muchos peces y puede aguantar la respiración varios minutos.", datoCurioso:"Los pingüinos se enamoran de por vida. ¡Siempre vuelven al mismo nido y a la misma pareja cada año!", colorPrincipal:"#2F4F4F", medallaNombre:"El Nadador Veloz" },
-    coordenadasEjemplo:[-29.2279,-71.5391] },
-
-  { id:"ave-007", nombreComun:"Chucao", nombreCientifico:"Scelorchilus rubecula", zona:"Sur (Bosque Valdiviano)", emoji:"🍊", pinColor:"#FF6B35",
-    imagenes:["https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Scelorchilus_rubecula_male.jpg/640px-Scelorchilus_rubecula_male.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Chucao_tapaculo_%28Scelorchilus_rubecula%29.jpg/640px-Chucao_tapaculo_%28Scelorchilus_rubecula%29.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Scelorchilus_rubecula_in_Patagonia.jpg/640px-Scelorchilus_rubecula_in_Patagonia.jpg"],
-    sonidoUrl:"https://upload.wikimedia.org/wikipedia/commons/6/6b/Scelorchilus_rubecula_-_song.ogg",
-    datosAdulto:{ habitat:"Interior del bosque templado lluvioso valdiviano y de Chiloé. Sotobosque denso con hojarasca húmeda.", estadoConservacion:"Preocupación Menor (LC) — IUCN", mesesAvistamiento:["Oct","Nov","Dic","Ene","Feb"] },
-    datosNino:{ superpoder:"¡Puede moverse por el bosque como un fantasma! Se escabulle entre las ramas tan rápido que casi nunca lo puedes ver.", datoCurioso:"En la cultura mapuche el Chucao es sagrado. Si lo escuchas por la derecha, ¡traerá buena suerte!", colorPrincipal:"#FF6B35", medallaNombre:"El Mensajero del Bosque" },
-    coordenadasEjemplo:[-39.8142,-73.2459] },
-
-  { id:"ave-008", nombreComun:"Picaflor Chico", nombreCientifico:"Sephanoides sephaniodes", zona:"Centro-Sur", emoji:"💚", pinColor:"#00A86B",
-    imagenes:["https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Sephanoides_sephaniodes_male.jpg/640px-Sephanoides_sephaniodes_male.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Picaflor_chico_macho.jpg/640px-Picaflor_chico_macho.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Sephanoides_sephanoides_female.jpg/640px-Sephanoides_sephanoides_female.jpg"],
-    sonidoUrl:"https://upload.wikimedia.org/wikipedia/commons/c/c3/Sephanoides_sephaniodes_song.ogg",
-    datosAdulto:{ habitat:"Bosques nativos, jardines con flores y matorrales desde el nivel del mar hasta los 2.500 m de altitud.", estadoConservacion:"Preocupación Menor (LC) — IUCN", mesesAvistamiento:["Ago","Sep","Oct","Nov","Dic","Ene"] },
-    datosNino:{ superpoder:"¡Puede volar hacia atrás! Es el único pájaro del mundo que lo hace. Sus alitas se mueven tan rápido que parecen invisibles.", datoCurioso:"Su corazón late hasta 1.200 veces por minuto cuando vuela. ¡El más rápido del reino animal!", colorPrincipal:"#00A86B", medallaNombre:"El Acróbata del Aire" },
-    coordenadasEjemplo:[-38.7359,-72.5904] },
-
-  { id:"ave-009", nombreComun:"Cachudito", nombreCientifico:"Anairetes parulus", zona:"Centro-Sur", emoji:"👑", pinColor:"#8B6914",
-    imagenes:["https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Anairetes_parulus_-_tufted_tit-tyrant.jpg/640px-Anairetes_parulus_-_tufted_tit-tyrant.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Cachudito_de_Juan_Fernandez.jpg/640px-Cachudito_de_Juan_Fernandez.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Anairetes_parulus_pair.jpg/640px-Anairetes_parulus_pair.jpg"],
-    sonidoUrl:"https://upload.wikimedia.org/wikipedia/commons/b/bc/Anairetes_parulus_song.ogg",
-    datosAdulto:{ habitat:"Matorrales espinosos, jardines, parques, bordes de bosques. Muy común en zonas periurbanas a lo largo de Chile.", estadoConservacion:"Preocupación Menor (LC) — IUCN", mesesAvistamiento:["Jul","Ago","Sep","Oct","Nov"] },
-    datosNino:{ superpoder:"¡Tiene el mejor peinado del mundo animal! Su copete parado es como una corona que siempre lleva puesta, sin importar el viento.", datoCurioso:"¡Es tan pequeño que puede esconderse detrás de una hoja, pero no le teme a pájaros mucho más grandes!", colorPrincipal:"#F5F5DC", medallaNombre:"El Rey del Copete" },
-    coordenadasEjemplo:[-33.4372,-70.6506] },
-
-  { id:"ave-010", nombreComun:"Bandurria", nombreCientifico:"Theristicus melanopis", zona:"Centro-Sur", emoji:"🌾", pinColor:"#8B4513",
-    imagenes:["https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Bandurria_%28Theristicus_melanopis%29.jpg/640px-Bandurria_%28Theristicus_melanopis%29.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Theristicus_melanopis_flying.jpg/640px-Theristicus_melanopis_flying.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Bandurria_en_vuelo.jpg/640px-Bandurria_en_vuelo.jpg"],
-    sonidoUrl:"https://upload.wikimedia.org/wikipedia/commons/8/8a/Theristicus_melanopis_-_call.ogg",
-    datosAdulto:{ habitat:"Pastizales abiertos, campos agrícolas, praderas húmedas, bordes de ríos y lagos. Frecuente en zonas andinas hasta 4.500 m.", estadoConservacion:"Preocupación Menor (LC) — IUCN", mesesAvistamiento:["Ago","Sep","Oct","Nov","Dic"] },
-    datosNino:{ superpoder:"¡Tiene un pico curvo mágico como una varita! Con él hunde la cabeza en el barro y encuentra gusanos escondidos que nadie más puede ver.", datoCurioso:"¡Vuela en grupos haciendo figuras en el cielo! Son tan coordinadas que parecen estar bailando una coreografía ensayada.", colorPrincipal:"#D2B48C", medallaNombre:"La Bailarina del Cielo" },
-    coordenadasEjemplo:[-35.4264,-71.6554] }
-];
+// Iniciar la carga al abrir la página
+document.addEventListener('DOMContentLoaded', () => {
+  cargarBaseDeDatos();
+});
 
 // ══ ESTADO GLOBAL ══
 let modoNino      = false;
