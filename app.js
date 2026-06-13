@@ -1,336 +1,338 @@
 // ==========================================
 // CONFIGURACIÓN GLOBAL Y ESTADO DE LA APP
 // ==========================================
-let mapa = null;
-let marcadoresGroup = null;
-let todasLasAves = [];
-let modoActual = 'adulto'; // 'adulto' o 'nino'
+let mapa;
+let marcadorUsuario = null; // Guarda el pin del GPS del usuario
+let aves = [];
+let aveActual = null;
+let modoAdulto = true;
+let fotosActuales = [];
+let fotoIndex = 0;
+let audioObjeto = null;
+let vozActiva = false;
 
-// Coordenadas iniciales del mapa (Centro de Chile)
-const CHILE_CENTRO = [-35.675147, -71.542969];
-const ZOOM_INICIAL = 5;
+// Variables globales de paginación para el Álbum
+let paginaActualAlbum = 1;
+const avesPorPagina = 10;
 
-// ==========================================
-// 1. CARGA DE DATOS (MIGRACIÓN A 50 AVES)
-// ==========================================
-async function inicializarDatos() {
-    try {
-        // Traer el archivo aves.json actualizado
-        const respuesta = await fetch('aves.json');
-        if (!respuesta.ok) throw new Error("No se pudo obtener el archivo aves.json");
-        const avesNuevas = await respuesta.json();
-        
-        // Verificar almacenamiento local (localStorage)
-        const memoriaLocal = localStorage.getItem('aves_data');
-        
-        if (memoriaLocal) {
-            const avesGuardadas = JSON.parse(memoriaLocal);
-            
-            // SI DETECTA QUE PASAMOS DE 10 A 50 AVES, SE ACTUALIZA AUTOMÁTICAMENTE
-            if (avesGuardadas.length !== avesNuevas.length) {
-                console.log(`[Base de Datos] Sincronizando de ${avesGuardadas.length} a ${avesNuevas.length} aves.`);
-                localStorage.setItem('aves_data', JSON.stringify(avesNuevas));
-                todasLasAves = avesNuevas;
-            } else {
-                todasLasAves = avesGuardadas;
-            }
-        } else {
-            // Primera ejecución de la app
-            localStorage.setItem('aves_data', JSON.stringify(avesNuevas));
-            todasLasAves = avesNuevas;
-        }
-        
-        // Renderizar la interfaz inicial
-        actualizarListaAves(todasLasAves);
-        actualizarMapa(todasLasAves);
-        actualizarContadores();
-
-    } catch (error) {
-        console.error("Error crítico al inicializar la aplicación:", error);
-        alert("Hubo un problema al cargar la base de datos de aves.");
-    }
-}
-
-// ==========================================
-// 2. CONFIGURACIÓN DEL MAPA (LEAFLET)
-// ==========================================
-function inicializarMapa() {
-    // Evitar duplicación si ya está inicializado
-    if (mapa !== null) return;
-
-    mapa = L.map('mapa', {
-        center: CHILE_CENTRO,
-        zoom: ZOOM_INICIAL,
-        minZoom: 4,
-        maxZoom: 12
-    });
-
-    // Capa de mapa estilizada y limpia (CartoDB Positron)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-    }).addTo(mapa);
-
-    // Grupo contenedor para poder limpiar/recalcular marcadores fácilmente
-    marcadoresGroup = L.layerGroup().addTo(mapa);
-}
-
-function actualizarMapa(avesAFiltrar) {
-    if (!marcadoresGroup) return;
-    marcadoresGroup.clearLayers();
-
-    // Mapeo aproximado de zonas a coordenadas para posicionar los pines en el mapa
-    const coordenadasZonas = {
-        "Centro-Sur": [-36.5, -72.0],
-        "Sur (Bosque Templado)": [-41.5, -72.5],
-        "Todo Chile": [-33.4, -70.6],
-        "Centro-Sur y Juan Fernández": [-33.6, -78.8],
-        "Sur y Patagonia": [-45.5, -72.0],
-        "Centro-Sur (Migratorio)": [-38.0, -72.2],
-        "Cordillera de los Andes": [-33.0, -70.2],
-        "Centro-Sur y Patagonia": [-43.0, -71.5],
-        "Norte-Centro-Sur": [-29.5, -70.5],
-        "Altiplano y Patagonia": [-18.5, -69.2],
-        "Norte Chico y Centro (Endémica)": [-30.0, -71.0],
-        "Sur (Bosque Nativo)": [-40.0, -73.0],
-        "Sur (Bosques de Araucaria y Coigüe)": [-38.5, -71.3],
-        "Todo el litoral e internacionales": [-32.0, -71.5],
-        "Centro-Sur y lagos australes": [-39.5, -72.0],
-        "Humedales costeros (Chiloé)": [-42.5, -73.7],
-        "Centro-Sur y Canales Australes": [-46.0, -74.0],
-        "Costas de todo Chile (Migratoria)": [-25.0, -70.5],
-        "Todo el litoral costero": [-36.8, -73.1],
-        "Litoral marino": [-30.3, -71.6],
-        "Costas del Norte y Centro": [-23.5, -70.4],
-        "Islotes costeros Norte y Centro": [-29.0, -71.5],
-        "Canales y Costas del Sur": [-53.0, -70.9],
-        "Norte Chico a Centro-Sur": [-31.5, -71.2],
-        "Bofedales del Altiplano": [-19.2, -69.0],
-        "Humedales del Centro y Sur": [-37.3, -73.0],
-        "Extremo Austral y Patagonia": [-51.5, -72.5],
-        "Lagos y lagunas de todo Chile": [-35.2, -71.8],
-        "Cordillera y Extremo Austral": [-49.0, -73.0],
-        "Atacama al extremo austral": [-27.3, -70.3],
-        "Atacama a Tierra del Fuego": [-44.0, -71.8],
-        "Antofagasta a Región de Aysén": [-34.0, -71.0],
-        "Bosques del Sur y Patagonia": [-42.0, -72.8],
-        "Atacama a la Región de Aysén": [-32.5, -71.1]
-    };
-
-    avesAFiltrar.forEach(ave => {
-        const coords = coordenadasZonas[ave.zona] || CHILE_CENTRO;
-        
-        // Agregar una pequeña variación (jitter) para que los pines de la misma zona no se tapen por completo
-        const latVariacion = coords[0] + (Math.random() - 0.5) * 0.4;
-        const lngVariacion = coords[1] + (Math.random() - 0.5) * 0.4;
-
-        // Generar el HTML del pin usando su propiedad pinColor nativa de aves.json
-        const pinHTML = `
-            <div style="
-                background-color: ${ave.pinColor}; 
-                width: 36px; 
-                height: 36px; 
-                border-radius: 50% 50% 50% 0; 
-                transform: rotate(-45deg); 
-                display: flex; 
-                align-items: center; 
-                justify-content: center; 
-                border: 2px solid white; 
-                box-shadow: 0px 2px 5px rgba(0,0,0,0.4);">
-                <span style="transform: rotate(45deg); font-size: 16px;">${ave.emoji}</span>
-            </div>`;
-
-        const customIcon = L.divIcon({
-            html: pinHTML,
-            className: 'custom-bird-pin',
-            iconSize: [36, 36],
-            iconAnchor: [18, 36],
-            popupAnchor: [0, -36]
-        });
-
-        // Crear ventana flotante (Popup)
-        const contenidoPopup = `
-            <div class="p-2 text-center font-sans">
-                <span class="text-2xl">${ave.emoji}</span>
-                <h4 class="font-bold text-gray-800 text-sm mt-1">${ave.nombre}</h4>
-                <p class="text-xs italic text-gray-500">${ave.nombreCientifico}</p>
-                <button onclick="verDetalleAve(${ave.id})" class="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs py-1 px-3 rounded-full transition shadow">
-                    Ver Avistamiento
-                </button>
-            </div>
-        `;
-
-        L.marker([latVariacion, lngVariacion], { icon: customIcon })
-            .bindPopup(contenidoPopup)
-            .addTo(marcadoresGroup);
-    });
-}
-
-// ==========================================
-// 3. RENDERIZADO DE LA INTERFAZ DE USUARIO
-// ==========================================
-function actualizarListaAves(avesAMostrar) {
-    const contenedor = document.getElementById('lista-aves');
-    if (!contenedor) return;
-    contenedor.innerHTML = '';
-
-    if (avesAMostrar.length === 0) {
-        contenedor.innerHTML = `
-            <div class="col-span-full text-center py-8 text-gray-500">
-                ⚠️ No se encontraron aves que coincidan con la búsqueda o filtro.
-            </div>`;
-        return;
-    }
-
-    avesAMostrar.forEach(ave => {
-        const tarjeta = document.createElement('div');
-        tarjeta.className = "bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition border border-gray-100 flex flex-col justify-between cursor-pointer";
-        tarjeta.setAttribute('onclick', `verDetalleAve(${ave.id})`);
-
-        tarjeta.innerHTML = `
-            <div>
-                <div class="flex justify-between items-start mb-2">
-                    <span class="text-3xl bg-gray-50 p-2 rounded-xl">${ave.emoji}</span>
-                    <span class="text-xs px-2 py-1 rounded-full font-medium" style="background-color: ${ave.pinColor}22; color: ${ave.pinColor}">
-                        ${ave.zona.split('(')[0].trim()}
-                    </span>
-                </div>
-                <h3 class="font-bold text-gray-800 text-base mb-0.5">${ave.nombre}</h3>
-                <p class="text-xs italic text-gray-400 mb-2">${ave.nombreCientifico}</p>
-            </div>
-            <div class="mt-4 pt-3 border-t border-gray-50 flex justify-between items-center text-xs">
-                <span class="text-gray-500 font-medium">📋 ${ave.conservacion}</span>
-                <span class="text-indigo-600 font-semibold hover:underline">Ver ficha →</span>
-            </div>
-        `;
-        contenedor.appendChild(tarjeta);
-    });
-}
-
-function actualizarContadores() {
-    const badgeTotal = document.getElementById('contador-total');
-    if (badgeTotal) {
-        badgeTotal.textContent = `${todasLasAves.length} Especies`;
-    }
-}
-
-// ==========================================
-// 4. VISTA DE DETALLES Y MODOS (ADULTO / NIÑO)
-// ==========================================
-function verDetalleAve(id) {
-    const ave = todasLasAves.find(a => a.id === id);
-    if (!ave) return;
-
-    // Cambiar a la vista/pestaña de detalle (Lógica de tu HTML)
-    mostrarPestaña('vista-detalle');
-
-    // Elementos comunes
-    document.getElementById('detalle-emoji').textContent = ave.emoji;
-    document.getElementById('detalle-nombre').textContent = ave.nombre;
-    document.getElementById('detalle-cientifico').textContent = ave.nombreCientifico;
-    document.getElementById('detalle-zona').textContent = ave.zona;
-    document.getElementById('detalle-conservacion').textContent = ave.conservacion;
-
-    // Configurar paneles específicos según el modo activo
-    const panelAdulto = document.getElementById('info-modo-adulto');
-    const panelNino = document.getElementById('info-modo-nino');
-
-    if (modoActual === 'adulto') {
-        panelAdulto.classList.remove('hidden');
-        panelNino.classList.add('hidden');
-        document.getElementById('detalle-habitat').textContent = ave.habitat;
-    } else {
-        panelAdulto.classList.add('hidden');
-        panelNino.classList.remove('hidden');
-        document.getElementById('nino-superpoder').textContent = ave.superpoder;
-        document.getElementById('nino-curioso').textContent = ave.datoCurioso;
-        document.getElementById('nino-color').textContent = ave.colorFavorito;
-    }
-
-    // Configurar el botón de audio con una API simulada o el lector de voz de la sección niños
-    const btnVoz = document.getElementById('btn-hablame');
-    if (btnVoz) {
-        btnVoz.onclick = () => {
-            const textoAEscuchar = `${ave.nombre}. Mi superpoder es: ${ave.superpoder}. ¿Sabías qué? ${ave.datoCurioso}`;
-            const proferencia = new SpeechSynthesisUtterance(textoAEscuchar);
-            proferencia.lang = 'es-CL';
-            window.speechSynthesis.cancel(); // Detener audios anteriores
-            window.speechSynthesis.speak(proferencia);
-        };
-    }
-}
-
-// ==========================================
-// 5. FILTROS, BUSCADOR Y CAMBIO DE MODOS
-// ==========================================
-function filtrarAves() {
-    const busqueda = document.getElementById('buscador')?.value.toLowerCase() || '';
-    const zonaFiltro = document.getElementById('filtro-zona')?.value || 'todas';
-
-    const avesFiltradas = todasLasAves.filter(ave => {
-        const coincideBusqueda = ave.nombre.toLowerCase().includes(busqueda) || 
-                                 ave.nombreCientifico.toLowerCase().includes(busqueda);
-        const coincideZona = zonaFiltro === 'todas' || ave.zona.toLowerCase().includes(zonaFiltro.toLowerCase());
-        
-        return coincideBusqueda && coincideZona;
-    });
-
-    actualizarListaAves(avesFiltradas);
-    actualizarMapa(avesFiltradas);
-}
-
-function cambiarModo(modo) {
-    modoActual = modo;
-    const btnAdulto = document.getElementById('modo-adulto');
-    const btnNino = document.getElementById('modo-nino');
-
-    if (modo === 'adulto') {
-        btnAdulto?.classList.add('bg-indigo-600', 'text-white');
-        btnAdulto?.classList.remove('bg-gray-100', 'text-gray-600');
-        btnNino?.classList.add('bg-gray-100', 'text-gray-600');
-        btnNino?.classList.remove('bg-amber-500', 'text-white');
-    } else {
-        btnNino?.classList.add('bg-amber-500', 'text-white');
-        btnNino?.classList.remove('bg-gray-100', 'text-gray-600');
-        btnAdulto?.classList.add('bg-gray-100', 'text-gray-600');
-        btnAdulto?.classList.remove('bg-indigo-600', 'text-white');
-    }
-    
-    // Si hay un ave abierta en detalle al cambiar de modo, refrescar sus campos dinámicos
-    const tituloDetalle = document.getElementById('detalle-nombre')?.textContent;
-    if (tituloDetalle) {
-        const aveActual = todasLasAves.find(a => a.nombre === tituloDetalle);
-        if (aveActual) verDetalleAve(aveActual.id);
-    }
-}
-
-// Control nativo de navegación por pestañas de la interfaz HTML
-function mostrarPestaña(idPestaña) {
-    const vistas = ['vista-mapa', 'vista-lista', 'vista-detalle'];
-    vistas.forEach(v => {
-        const el = document.getElementById(v);
-        if (el) {
-            if (v === idPestaña) el.classList.remove('hidden');
-            else el.classList.add('hidden');
-        }
-    });
-
-    // Forzar el redibujado de Leaflet si regresamos al mapa (arregla bugs visuales de cajas grises)
-    if (idPestaña === 'vista-mapa' && mapa) {
-        setTimeout(() => mapa.invalidateSize(), 100);
-    }
-}
-
-// ==========================================
-// 6. DETONADORES EN EL EVENTO LOAD
-// ==========================================
-document.addEventListener('DOMContentLoaded', () => {
-    // Inicializar mapa Leaflet básico
-    inicializarMapa();
-
-    // Cargar y validar JSON dinámico de 50 aves
-    inicializarDatos();
-
-    // Asignar escuchas al buscador y selectores si existen en el DOM
-    document.getElementById('buscador')?.addEventListener('input', filtrarAves);
-    document.getElementById('filtro-zona')?.addEventListener('change', filtrarAves);
+document.addEventListener("DOMContentLoaded", () => {
+  cargarBaseDeDatos();
 });
+
+// MODIFICACIÓN CRÍTICA: Forzar la lectura y limpiar caché local vieja
+function cargarBaseDeDatos() {
+  fetch('aves.json')
+    .then(response => {
+      if (!response.ok) throw new Error("Error al leer el archivo aves.json");
+      return response.json();
+    })
+    .then(data => {
+      // Guardamos la lista real del JSON de manera global
+      aves = data;
+      
+      // LÓGICA DE CONTROL: Guardamos y validamos en localStorage para evitar que el navegador use datos viejos
+      const avesEnMemoria = localStorage.getItem('aves_chile_data');
+      if (avesEnMemoria) {
+        const memoriaParseada = JSON.parse(avesEnMemoria);
+        // Si los datos guardados en el navegador difieren en tamaño (ej. tenías 10 y ahora hay 50)
+        if (memoriaParseada.length !== aves.length) {
+          console.log(`[Base de Datos] Actualizando caché vieja de ${memoriaParseada.length} a ${aves.length} aves.`);
+          localStorage.setItem('aves_chile_data', JSON.stringify(aves));
+        }
+      } else {
+        localStorage.setItem('aves_chile_data', JSON.stringify(aves));
+      }
+
+      // Actualizar contador en la interfaz de usuario
+      document.getElementById('contador-aves').textContent = `🐦 ${aves.length} aves`;
+      
+      // Inicializar el mapa y los componentes visuales
+      initMapa();
+      renderizarAlbum(); 
+      
+      if(aves.length > 0) {
+        seleccionarAve(aves[0], false); // Iniciamos sin mover el mapa al arrancar
+      }
+    })
+    .catch(err => {
+      console.error("Error cargando aves.json: ", err);
+      // Respaldo de emergencia por si el JSON falla temporalmente
+      const respaldo = localStorage.getItem('aves_chile_data');
+      if (respaldo) {
+        aves = JSON.parse(respaldo);
+        document.getElementById('contador-aves').textContent = `🐦 ${aves.length} aves`;
+        initMapa();
+        renderizarAlbum();
+        if(aves.length > 0) seleccionarAve(aves[0], false);
+      }
+    });
+}
+
+function initMapa() {
+  mapa = L.map('map').setView([-33.4489, -70.6693], 6);
+  
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(mapa);
+
+  aves.forEach(ave => {
+    const pinHtml = `
+      <div class="ave-pin" style="background:${ave.pinColor || '#1E8449'};">
+        <span class="ave-pin-emoji">${ave.emoji}</span>
+      </div>
+    `;
+    
+    const customIcon = L.divIcon({
+      html: pinHtml,
+      className: '',
+      iconSize: [38, 38],
+      iconAnchor: [19, 38]
+    });
+
+    const marker = L.marker(ave.coordenadasEjemplo, { icon: customIcon }).addTo(mapa);
+    
+    marker.on('click', () => {
+      seleccionarAve(ave, true); // Al hacer clic en el mapa, centramos suavemente
+    });
+  });
+}
+
+// moverMapa es un interruptor. Si es true, el mapa "vuela" hacia el ave.
+function seleccionarAve(ave, moverMapa = true) {
+  aveActual = ave;
+  
+  // Elementos Adulto
+  document.getElementById('adulto-emoji').textContent = ave.emoji;
+  document.getElementById('adulto-nombre').textContent = ave.nombreComun;
+  document.getElementById('adulto-cientifico').textContent = ave.nombreCientifico;
+  document.getElementById('adulto-habitat').textContent = ave.datosAdulto?.habitat || 'Sin datos';
+  document.getElementById('adulto-conservacion').textContent = ave.datosAdulto?.estadoConservacion || 'Sin datos';
+
+  // Elementos Niño
+  document.getElementById('nino-emoji').textContent = ave.emoji;
+  document.getElementById('nino-nombre').textContent = ave.nombreComun;
+  document.getElementById('nino-superpoder').textContent = ave.datosNino?.superpoder || '¡Descubriendo!';
+
+  // Reseteo de sonidos y voces activas
+  if(audioObjeto) { audioObjeto.pause(); audioObjeto = null; }
+  document.getElementById('btn-audio-a').textContent = "🔊 Escuchar Canto";
+  window.speechSynthesis?.cancel();
+  vozActiva = false;
+  document.getElementById('btn-voz-nino').textContent = "🐦 ¡Háblame!";
+
+  // Efecto de auto-zoom y vuelo dinámico en el mapa
+  if (moverMapa && mapa) {
+    mapa.flyTo(ave.coordenadasEjemplo, 9, {
+      animate: true,
+      duration: 1.5 // Duración del vuelo en segundos
+    });
+  }
+
+  obtenerFotosINaturalist(ave.nombreCientifico);
+}
+
+function obtenerFotosINaturalist(nombreCientifico) {
+  const contenedorAdulto = document.getElementById('car-adulto');
+  const contenedorNino = document.getElementById('car-nino');
+  
+  if (contenedorAdulto) contenedorAdulto.innerHTML = `<div class="text-white text-xs p-4">Buscando fotos...</div>`;
+  if (contenedorNino) contenedorNino.innerHTML = `<div class="text-pizarra text-xs p-4">Buscando fotos...</div>`;
+
+  fetch(`https://api.inaturalist.org/v1/taxa?q=${encodeURIComponent(nombreCientifico)}&per_page=1`)
+    .then(res => res.json())
+    .then(data => {
+      if(data.results && data.results.length > 0 && data.results[0].taxon_photos) {
+        fotosActuales = data.results[0].taxon_photos.slice(0, 5).map(p => p.photo.medium_url);
+      } else {
+        fotosActuales = ["https://images.unsplash.com/photo-1484557052118-f32bd25b45b5?w=500"];
+      }
+      fotoIndex = 0;
+      dibujarCarrusel();
+    })
+    .catch(() => {
+      fotosActuales = ["https://images.unsplash.com/photo-1484557052118-f32bd25b45b5?w=500"];
+      fotoIndex = 0;
+      dibujarCarrusel();
+    });
+}
+
+function dibujarCarrusel() {
+  const contA = document.getElementById('car-adulto');
+  const contN = document.getElementById('car-nino');
+  const dotsA = document.getElementById('car-dots-adulto');
+  const dotsN = document.getElementById('car-dots-nino');
+
+  if(!contA || !contN) return;
+
+  contA.innerHTML = ""; contN.innerHTML = "";
+  dotsA.innerHTML = ""; dotsN.innerHTML = "";
+
+  fotosActuales.forEach((url, index) => {
+    const claseActiva = index === fotoIndex ? 'activo' : '';
+    contA.innerHTML += `<div class="car-slide ${claseActiva}"><img src="${url}" alt="foto"></div>`;
+    contN.innerHTML += `<div class="car-slide ${claseActiva}"><img src="${url}" alt="foto"></div>`;
+
+    const dotActivo = index === fotoIndex ? 'activo' : '';
+    if(dotsA) dotsA.innerHTML += `<div class="car-dot ${dotActivo}" onclick="irAFoto(${index})"></div>`;
+    if(dotsN) dotsN.innerHTML += `<div class="car-dot ${dotActivo}" onclick="irAFoto(${index})"></div>`;
+  });
+}
+
+function carMover(direccion) {
+  if (fotosActuales.length === 0) return;
+  fotoIndex += direccion;
+  if (fotoIndex >= fotosActuales.length) fotoIndex = 0;
+  if (fotoIndex < 0) fotoIndex = fotosActuales.length - 1;
+  dibujarCarrusel();
+}
+
+function irAFoto(index) {
+  fotoIndex = index;
+  dibujarCarrusel();
+}
+
+function renderizarAlbum() {
+  const grid = document.getElementById('album-grid');
+  if(!grid) return;
+  grid.innerHTML = "";
+
+  const inicio = (paginaActualAlbum - 1) * avesPorPagina;
+  const fin = inicio + avesPorPagina;
+  const avesPagina = aves.slice(inicio, fin);
+
+  avesPagina.forEach(ave => {
+    grid.innerHTML += `
+      <div class="border border-gray-100 p-3 rounded-xl text-center bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors" 
+           onclick="event.stopPropagation(); seleccionarAvePorId('${ave.id}')">
+        <div class="text-3xl mb-1">${ave.emoji}</div>
+        <div class="font-black text-sm text-pizarra">${ave.nombreComun}</div>
+        <div class="text-xs text-pizarra/50 italic">${ave.nombreCientifico}</div>
+      </div>
+    `;
+  });
+
+  const totalPaginas = Math.ceil(aves.length / avesPorPagina) || 1;
+  document.getElementById('txt-paginacion').textContent = `Página ${paginaActualAlbum} de ${totalPaginas}`;
+  document.getElementById('btn-pag-ant').disabled = paginaActualAlbum === 1;
+  document.getElementById('btn-pag-sig').disabled = paginaActualAlbum === totalPaginas;
+}
+
+function cambiarPaginaAlbum(direccion) {
+  paginaActualAlbum += direccion;
+  renderizarAlbum();
+}
+
+function seleccionarAvePorId(id) {
+  // Aseguramos la búsqueda comparando strings o enteros de forma flexible
+  const encontrado = aves.find(a => String(a.id) === String(id));
+  if(encontrado) {
+    seleccionarAve(encontrado, true); // Activa el vuelo del mapa hacia el ave seleccionada
+    document.getElementById('app-header').scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function toggleModo() {
+  modoAdulto = !modoAdulto;
+  const tAdulto = document.getElementById('tarjeta-adulto');
+  const tNino = document.getElementById('tarjeta-nino');
+  const lbl = document.getElementById('label-modo');
+  const thumb = document.getElementById('switch-thumb');
+
+  if(modoAdulto) {
+    tAdulto.classList.remove('oculta'); tAdulto.classList.add('visible');
+    tNino.classList.remove('visible'); tNino.classList.add('oculta');
+    lbl.textContent = "Adulto 📊"; thumb.style.transform = "translateX(0px)";
+  } else {
+    tAdulto.classList.remove('visible'); tAdulto.classList.add('oculta');
+    tNino.classList.remove('oculta'); tNino.classList.add('visible');
+    lbl.textContent = "Niño 🧸"; thumb.style.transform = "translateX(28px)";
+  }
+}
+
+function toggleAudio() {
+  if(!aveActual || !aveActual.sonidoUrl) return;
+  const btn = document.getElementById('btn-audio-a');
+  if(audioObjeto && !audioObjeto.paused) {
+    audioObjeto.pause();
+    btn.textContent = "🔊 Escuchar Canto";
+  } else {
+    if(!audioObjeto) audioObjeto = new Audio(aveActual.sonidoUrl);
+    audioObjeto.play();
+    btn.textContent = "⏸ Pausar Canto";
+    audioObjeto.onended = () => btn.textContent = "🔊 Escuchar Canto";
+  }
+}
+
+function abrirTab(tabName, boton) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('activo'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('activa'));
+  document.getElementById(`panel-${tabName}`).classList.add('activo');
+  boton.classList.add('activa');
+}
+
+function toggleVoz() {
+  if(!aveActual) return;
+  const btn = document.getElementById('btn-voz-nino');
+  if(vozActiva) {
+    window.speechSynthesis?.cancel();
+    vozActiva = false;
+    btn.textContent = "🐦 ¡Háblame!";
+  } else {
+    const frase = aveActual.fraseNino || `Hola, soy el ${aveActual.nombreComun}`;
+    const superpoder = aveActual.datosNino?.superpoder || 'volar muy alto';
+    const texto = `${frase}. ¡Mi superpoder es: ${superpoder}!`;
+    
+    const ut = new SpeechSynthesisUtterance(texto);
+    ut.lang = 'es-CL';
+    ut.onend = () => {
+      vozActiva = false;
+      btn.textContent = "🐦 ¡Háblame!";
+    };
+    window.speechSynthesis?.speak(ut);
+    vozActiva = true;
+    btn.textContent = "⏸ Detener Voz";
+  }
+}
+
+// Geolocalización GPS Real por Navegador
+function centrarMiUbicacion() {
+  if (!navigator.geolocation) {
+    alert("Tu navegador o teléfono no soporta la geolocalización.");
+    return;
+  }
+
+  const btnUbicacion = document.getElementById('btn-ubicacion');
+  btnUbicacion.textContent = "⏳";
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+
+      btnUbicacion.textContent = "📍";
+
+      if (marcadorUsuario) {
+        mapa.removeLayer(marcadorUsuario);
+      }
+
+      const usuarioIcon = L.divIcon({
+        html: `<div style="background:#2980B9; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(0,0,0,0.4);"></div>`,
+        className: '',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+      });
+
+      marcadorUsuario = L.marker([lat, lng], { icon: usuarioIcon }).addTo(mapa)
+        .bindPopup("<b class='p-2 block text-center text-xs text-pizarra'>¡Estás aquí! 🌲</b>")
+        .openPopup();
+
+      mapa.flyTo([lat, lng], 13, { animate: true, duration: 1.8 });
+    },
+    (error) => {
+      btnUbicacion.textContent = "📍";
+      console.error("Error de GPS: ", error);
+      alert("No se pudo obtener tu ubicación. Asegúrate de activar el GPS y dar permisos a la página.");
+    },
+    { enableHighAccuracy: true, timeout: 7000 }
+  );
+}
