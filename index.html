@@ -1294,10 +1294,29 @@ function lanzarNotas() {
   }, 380);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  initMapa();
-  actualizarTarjeta(aveActual);
-});
+  // NUEVA LÓGICA DE CARGA
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      // 1. Cargamos el archivo externo (el ?t=... evita que el navegador use la versión vieja)
+      const respuesta = await fetch('aves.json?t=' + new Date().getTime());
+      if (!respuesta.ok) throw new Error("No se pudo leer aves.json");
+      
+      // 2. Guardamos los datos en la variable global 'aves'
+      aves = await respuesta.json();
+      
+      // 3. Ahora que tenemos los datos, inicializamos todo
+      if (aves.length > 0) {
+        aveActual = aves[0]; // Seleccionamos la primera ave
+        initMapa();          // Esto pintará los pines de las 50 aves
+        actualizarTarjeta(aveActual);
+      }
+    } catch (error) {
+      console.error("Error al cargar la base de datos:", error);
+      alert("No se pudieron cargar las aves. Revisa la consola (F12).");
+    }
+  });
+
+  // ... (aquí mantienes tus otras funciones como initMapa, actualizarTarjeta, etc.)
 </script>
 
 <!-- ── Lightbox ── -->
