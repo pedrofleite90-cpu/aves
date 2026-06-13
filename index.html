@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Alas de Chile</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Leaflet.js -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght=400;600;700;900&family=Lora:wght=400;600&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cielo:'#D6EAF8', lago:'#2980B9', bosque:'#1E8449',
+            hoja:'#A9DFBF', tierra:'#784212', sol:'#F7DC6F',
+            coral:'#E74C3C', niebla:'#F0F4F8', pizarra:'#2C3E50',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family:'Nunito',sans-serif; background:#F0F4F8; margin:0; }
+
+    .modo-switch { position:relative; cursor:pointer; user-select:none; }
+    .switch-track { width:56px; height:28px; border-radius:14px; transition:background .3s; }
+    .switch-thumb {
+      position:absolute; top:3px; left:3px; width:22px; height:22px;
+      border-radius:50%; background:white; box-shadow:0 1px 4px rgba(0,0,0,.25);
+      transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    #map {
+      height:280px; border-radius:16px;
+      box-shadow:0 4px 24px rgba(41,128,185,.18); z-index:0;
+    }
+
+    .ave-pin {
+      width:38px; height:38px; border-radius:50% 50% 50% 0;
+      transform:rotate(-45deg); display:flex; align-items:center; justify-content:center;
+      border:3px solid white; box-shadow:0 3px 10px rgba(0,0,0,.25);
+      cursor:pointer; transition:transform .2s;
+    }
+    .ave-pin:hover { transform:rotate(-45deg) scale(1.15); }
+    .ave-pin-emoji { transform:rotate(45deg); font-size:18px; line-height:1; }
+
+    #btn-ubicacion {
+      position:absolute; bottom:12px; right:12px; z-index:500;
+      width:42px; height:42px; border-radius:50%;
+      background:white; border:none;
+      box-shadow:0 2px 10px rgba(0,0,0,.2);
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.1rem; cursor:pointer;
+    }
+
+    .tarjeta-wrap { transition:opacity .35s ease, transform .35s ease; }
+    .tarjeta-wrap.oculta  { opacity:0; transform:translateY(8px); pointer-events:none; position:absolute; width:100%; }
+    .tarjeta-wrap.visible { opacity:1; transform:translateY(0); }
+    .tab-btn.activa { border-bottom:3px solid #1E8449; color:#1E8449; font-weight:700; }
+    .tab-panel { display:none; }
+    .tab-panel.activo { display:block; }
+    .fondo-nino { background:linear-gradient(135deg,#FFF9E6 0%,#E8F5E9 100%); }
+
+    .car-wrap { position:relative; height:200px; border-radius:14px; overflow:hidden; background:#111827; }
+    .car-slide { position:absolute; inset:0; opacity:0; transition:opacity .5s ease; }
+    .car-slide.activo { opacity:1; }
+    .car-slide img { width:100%; height:100%; object-fit:cover; display:block; }
+    
+    .car-arrow {
+      position:absolute; top:50%; transform:translateY(-50%); z-index:5;
+      background:rgba(0,0,0,.45); color:white; border:none; border-radius:50%;
+      width:32px; height:32px; font-size:1rem; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .car-prev { left:8px; } .car-next { right:8px; }
+    .car-dots { display:flex; justify-content:center; gap:6px; margin-top:8px; }
+    .car-dot { width:7px; height:7px; border-radius:50%; background:#ccc; cursor:pointer; }
+    .car-dot.activo { background:#1E8449; transform:scale(1.35); }
+
+    .btn-audio {
+      width:100%; display:flex; align-items:center; justify-content:center;
+      gap:8px; padding:10px; border-radius:14px; border:none; cursor:pointer;
+      font-weight:900; color:white;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-niebla">
+
+<!-- HEADER -->
+<header id="app-header" class="sticky top-0 z-50 bg-gradient-to-r from-bosque to-lago shadow-md">
+  <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <h1 class="text-white font-black text-xl tracking-tight">Alas de Chile</h1>
+    </div>
+    <button id="btn-modo" onclick="toggleModo()" class="modo-switch flex items-center gap-2 bg-white/20 rounded-2xl px-3 py-2 border border-white/30">
+      <span id="label-modo" class="text-white font-bold text-xs">Adulto 📊</span>
+      <div class="relative">
+        <div id="switch-track" class="switch-track bg-white/40"></div>
+        <div id="switch-thumb" class="switch-thumb"></div>
+      </div>
+    </button>
+  </div>
+</header>
+
+<main class="max-w-md mx-auto px-4 pb-28">
+  <!-- MAPA -->
+  <section class="mt-4">
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="text-pizarra font-bold text-sm uppercase tracking-widest opacity-60">Mapa Explorador</h2>
+      <span id="contador-aves" class="text-xs bg-bosque/10 text-bosque font-semibold px-2 py-0.5 rounded-full">Cargando...</span>
+    </div>
+    <div style="position:relative;">
+      <div id="map"></div>
+      <button id="btn-ubicacion" onclick="centrarMiUbicacion()">📍</button>
+    </div>
+  </section>
+
+  <!-- TARJETA DETALLES -->
+  <section class="mt-6">
+    <div class="relative" style="min-height:340px;">
+      
+      <!-- ADULTO -->
+      <div id="tarjeta-adulto" class="tarjeta-wrap visible bg-white rounded-2xl overflow-hidden shadow-sm">
+        <div id="adulto-header" class="bg-gradient-to-r from-bosque to-lago p-4 text-white">
+          <div class="flex items-center gap-3">
+            <div id="adulto-emoji" class="text-4xl">🐦</div>
+            <div>
+              <h3 id="adulto-nombre" class="font-black text-xl">Selecciona un ave</h3>
+              <p id="adulto-cientifico" class="text-white/70 text-xs italic">Haz clic en un pin del mapa</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-4 pt-3">
+          <div class="car-wrap">
+            <div id="car-adulto" class="w-full h-full relative"></div>
+            <button class="car-arrow car-prev" onclick="carMover(-1)">‹</button>
+            <button class="car-arrow car-next" onclick="carMover(1)">›</button>
+          </div>
+          <div id="car-dots-adulto" class="car-dots"></div>
+        </div>
+
+        <div class="p-4">
+          <button id="btn-audio-a" class="btn-audio bg-bosque mb-4" onclick="toggleAudio()">🔊 Escuchar Canto</button>
+          <div class="flex border-b border-gray-100 text-xs font-bold text-center mb-3">
+            <button class="tab-btn activa flex-1 py-2" onclick="abrirTab('habitat',this)">Hábitat</button>
+            <button class="tab-btn flex-1 py-2" onclick="abrirTab('conservacion',this)">Conservación</button>
+          </div>
+          <div id="panel-habitat" class="tab-panel activo text-sm text-pizarra/80">
+            <p id="adulto-habitat"></p>
+          </div>
+          <div id="panel-conservacion" class="tab-panel text-sm text-pizarra/80">
+            <p id="adulto-conservacion"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- NIÑO -->
+      <div id="tarjeta-nino" class="tarjeta-wrap oculta bg-white rounded-2xl overflow-hidden shadow-md">
+        <div class="fondo-nino p-5 text-center">
+          <div id="nino-emoji" class="text-6xl mb-2">🐦</div>
+          <h3 id="nino-nombre" class="font-black text-2xl text-bosque">¡Haz clic en un ave!</h3>
+          <p id="nino-subtitulo" class="text-sm text-bosque/70 font-bold">¡Y descubre sus secretos!</p>
+        </div>
+        <div class="px-4 pt-2">
+          <div class="car-wrap">
+            <div id="car-nino" class="w-full h-full relative"></div>
+            <button class="car-arrow car-prev" onclick="carMover(-1)">‹</button>
+            <button class="car-arrow car-next" onclick="carMover(1)">›</button>
+          </div>
+          <div id="car-dots-nino" class="car-dots"></div>
+        </div>
+        <div class="p-4">
+          <button id="btn-voz-nino" class="btn-audio bg-gradient-to-r from-pink-500 to-yellow-500 py-3 text-lg rounded-xl" onclick="toggleVoz()">🐦 ¡Háblame!</button>
+          <div class="mt-4 bg-bosque/10 rounded-xl p-4 border border-bosque/20">
+            <h4 class="font-black text-bosque">⚡ ¡Mi Súper Poder!</h4>
+            <p id="nino-superpoder" class="text-sm font-semibold text-pizarra/90 mt-1"></p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SECCIÓN ÁLBUM PAGINADO (¡NUEVO!) -->
+  <section class="mt-8 bg-white p-4 rounded-2xl shadow-sm">
+    <h2 class="text-pizarra font-black text-md uppercase tracking-wider mb-3 text-center">📖 Mi Álbum de Colección</h2>
+    <div id="album-grid" class="grid grid-cols-2 gap-3"></div>
+    
+    <!-- Controles de Paginación -->
+    <div class="flex items-center justify-between mt-5 pt-3 border-t border-gray-100">
+      <button id="btn-pag-ant" onclick="cambiarPaginaAlbum(-1)" class="px-4 py-2 bg-gray-100 text-pizarra font-bold text-xs rounded-xl disabled:opacity-40">◀ Anterior</button>
+      <span id="txt-paginacion" class="text-xs font-bold text-pizarra/60">Página 1 de 1</span>
+      <button id="btn-pag-sig" onclick="cambiarPaginaAlbum(1)" class="px-4 py-2 bg-gray-100 text-pizarra font-bold text-xs rounded-xl disabled:opacity-40">Siguiente ▶</button>
+    </div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

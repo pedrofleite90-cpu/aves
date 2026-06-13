@@ -1,0 +1,1190 @@
+[
+  {
+    "id": "ave-001",
+    "nombreComun": "Zorzal",
+    "nombreCientifico": "Turdus falcklandii",
+    "zona": "Centro-Sur",
+    "emoji": "🐦",
+    "pinColor": "#784212",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Turdus_falcklandii.mp3",
+    "fraseNino": "¡Hola, amiguito! Soy el Zorzal y me encanta buscar lombrices en el pasto húmedo por las mañanas. ¡Puedo escucharlas moverse bajo la tierra! Mi canto suena así: ¡Fiuuu, fiuuu, chirr-chirr!",
+    "datosAdulto": {
+      "habitat": "Bosques nativos, jardines urbanos, parques y zonas rurales con vegetación densa. Se adapta bien a ambientes periurbanos.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Ago", "Sep", "Oct", "Nov", "Dic"]
+    },
+    "datosNino": {
+      "superpoder": "¡Tiene un canto tan hermoso que puede aprender nuevas canciones escuchando a otros pájaros, como si fuera un DJ de la naturaleza!",
+      "datoCurioso": "¡Puede escuchar a las lombrices moverse bajo el suelo y las saca con su pico!",
+      "colorPrincipal": "#D2691E",
+      "medallaNombre": "El Gran Cantor"
+    },
+    "coordenadasEjemplo": [-33.4489, -70.6693]
+  },
+  {
+    "id": "ave-002",
+    "nombreComun": "Queltehue",
+    "nombreCientifico": "Vanellus chilensis",
+    "zona": "Centro",
+    "emoji": "🪶",
+    "pinColor": "#228B22",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/9/9b/Vanellus_chilensis_sound.ogg",
+    "fraseNino": "¡Buenas, soy el Queltehue! Soy el guardián de los campos y parques de Chile. Si ves que vuelo gritando muy fuerte, ¡es porque estoy avisando que hay un peligro cerca!",
+    "datosAdulto": {
+      "habitat": "Praderas abiertas, orillas de ríos y lagos, campos agrícolas, bordes de caminos y parques urbanos con césped corto.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Sep", "Oct", "Nov", "Dic", "Ene"]
+    },
+    "datosNino": {
+      "superpoder": "¡Es el guardián del campo! Cuando detecta peligro, grita tan fuerte que alerta a todos los animales cercanos.",
+      "datoCurioso": "Tiene espuelas escondidas en sus alas para defender su nido. ¡Un superhéroe con armas secretas!",
+      "colorPrincipal": "#228B22",
+      "medallaNombre": "El Guardián Valiente"
+    },
+    "coordenadasEjemplo": [-33.5614, -70.6506]
+  },
+  {
+    "id": "ave-003",
+    "nombreComun": "Loica",
+    "nombreCientifico": "Leistes loyca",
+    "zona": "Centro-Sur",
+    "emoji": "🔴",
+    "pinColor": "#DC143C",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/3/36/Leistes_loyca_song.mp3",
+    "fraseNino": "¡Hola! Soy la Loica. ¿Viste mi pecho de color rojo brillante? ¡Parece un escudo de superhéroe! Soy el ave más querida de los campos chilenos y cuando estoy contenta canto bien fuerte.",
+    "datosAdulto": {
+      "habitat": "Pastizales abiertos, campos agrícolas, praderas andinas y costeras. Prefiere terrenos planos con vegetación herbácea baja.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Jul", "Ago", "Sep", "Oct", "Nov"]
+    },
+    "datosNino": {
+      "superpoder": "¡La Loica lleva el corazón en el pecho! Su rojo brillante es como una llama que nunca se apaga, símbolo de valentía.",
+      "datoCurioso": "Es tan querida en Chile que aparece en canciones y poesías. ¡Es la estrella de rock de los pájaros chilenos!",
+      "colorPrincipal": "#DC143C",
+      "medallaNombre": "La Guerrera Roja"
+    },
+    "coordenadasEjemplo": [-34.1708, -71.5994]
+  },
+  {
+    "id": "ave-004",
+    "nombreComun": "Siete Colores",
+    "nombreCientifico": "Tachuris rubrigastra",
+    "zona": "Centro-Sur",
+    "emoji": "🌈",
+    "pinColor": "#DAA520",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Tachuris_rubrigastra_male.jpg",
+    "fraseNino": "¡Hola! Soy el Siete Colores. Vivo escondido entre los juncos y las totoras de las lagunas. ¡Soy pequeñito pero mis plumas brillan con todos los colores del arcoíris!",
+    "datosAdulto": {
+      "habitat": "Zonas de humedales, totorales y pajonales a orillas de lagos, lagunas y ríos lentos desde Atacama hasta Aysén.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Oct", "Nov", "Dic", "Ene", "Feb"]
+    },
+    "datosNino": {
+      "superpoder": "¡Es el acróbata de los pantanos! Puede saltar de junco en junco balanceándose sin caerse nunca.",
+      "datoCurioso": "Su nido es una tacita perfecta hecha de hojas tejidas que amarra firmemente a una sola rama de totora.",
+      "colorPrincipal": "#DAA520",
+      "medallaNombre": "El Arcoíris Viviente"
+    },
+    "coordenadasEjemplo": [-33.4250, -70.7510]
+  },
+  {
+    "id": "ave-005",
+    "nombreComun": "Cóndor Andino",
+    "nombreCientifico": "Vultur gryphus",
+    "zona": "Norte-Centro-Sur",
+    "emoji": "🦅",
+    "pinColor": "#1A1A2E",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/4/40/Vultur_gryphus.mp3",
+    "fraseNino": "¡Hola desde lo alto! Soy el Cóndor Andino, el rey de las montañas de la Cordillera de los Andes. ¡Mis alas abiertas son tan grandes como un auto! Me encanta planear muy arriba sin cansarme.",
+    "datosAdulto": {
+      "habitat": "Zonas montañosas altas, cordilleras, acantilados y valles profundos a lo largo de todo Chile, buscando corrientes térmicas de aire.",
+      "estadoConservacion": "Vulnerable (VU) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Es el planeador supremo! Puede volar por horas enteras aprovechando el viento sin batir sus alas ni una sola vez.",
+      "datoCurioso": "No tiene plumas en su cabeza para mantenerse limpio cuando se alimenta. ¡Es un diseño de la naturaleza!",
+      "colorPrincipal": "#1A1A2E",
+      "medallaNombre": "El Rey del Viento"
+    },
+    "coordenadasEjemplo": [-33.3500, -70.4500]
+  },
+  {
+    "id": "ave-006",
+    "nombreComun": "Chucao",
+    "nombreCientifico": "Scelorchilus rubecula",
+    "zona": "Sur",
+    "emoji": "🍂",
+    "pinColor": "#A0522D",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/RVPALALUXG/Scelorchilus_rubecula_2016-12-14.mp3",
+    "fraseNino": "¡Hola! Soy el Chucao. Vivo escondido en lo más profundo y húmedo del bosque sureño. Los exploradores me buscan porque soy el espíritu del bosque. ¡Si canto a tu derecha es buena suerte!",
+    "datosAdulto": {
+      "habitat": "Sotobosque denso de los bosques templados lluviosos (tipo valdiviano), matorrales húmedos y quebradas oscuras.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Oct", "Nov", "Dic", "Ene", "Feb"]
+    },
+    "datosNino": {
+      "superpoder": "¡Es el adivino del bosque! Las leyendas dicen que su fuerte canto puede predecir si un explorador tendrá un buen o mal viaje.",
+      "datoCurioso": "Prefiere caminar, saltar y correr por el suelo lleno de hojas caídas antes que volar por los árboles altos.",
+      "colorPrincipal": "#A0522D",
+      "medallaNombre": "El Duendecillo del Bosque"
+    },
+    "coordenadasEjemplo": [-39.8142, -73.2459]
+  },
+  {
+    "id": "ave-007",
+    "nombreComun": "Flamenco Chileno",
+    "nombreCientifico": "Phoenicopterus chilensis",
+    "zona": "Norte-Sur",
+    "emoji": "🦩",
+    "pinColor": "#FF8C00",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/c/cd/Phoenicopterus_roseus_cackle.mp3",
+    "fraseNino": "¡Hola! Soy el Flamenco Chileno. Me verás siempre pataleando en el agua salada de las lagunas del norte o del extremo sur. ¿Te gusta mi color rosado? ¡Se debe a los ricos camarones que como!",
+    "datosAdulto": {
+      "habitat": "Lagunas altiplánicas salobres en el norte, estuarios, salares, humedales costeros y llanuras de Magallanes.",
+      "estadoConservacion": "Casi Amenazado (NT) — IUCN",
+      "mesesAvistamiento": ["Ene", "Feb", "Mar", "Nov", "Dic"]
+    },
+    "datosNino": {
+      "superpoder": "¡Es el maestro del equilibrio! Puede dormir parado sobre una sola pata en aguas heladas sin congelarse ni caerse.",
+      "datoCurioso": "Nace de color gris y se vuelve rosado brillante a medida que crece gracias a los pigmentos de los diminutos crustáceos que filtra con su pico.",
+      "colorPrincipal": "#FF8C00",
+      "medallaNombre": "El Bailarín de los Salares"
+    },
+    "coordenadasEjemplo": [-23.3333, -68.1667]
+  },
+  {
+    "id": "ave-008",
+    "nombreComun": "Martín Pescador",
+    "nombreCientifico": "Megaceryle torquata",
+    "zona": "Sur",
+    "emoji": "🐟",
+    "pinColor": "#008B8B",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Megaceryle_alcyon_rattle.mp3",
+    "fraseNino": "¡Atención! Soy el Martín Pescador. Me pongo en las ramas altas sobre los ríos y miro fijamente el agua. ¡Cuando veo un pez, me lanzo como un cohete veloz y atrapo mi almuerzo!",
+    "datosAdulto": {
+      "habitat": "Márgenes de ríos caudalosos, lagos, canales patagónicos, lagunas arboladas y zonas costeras tranquilas del sur de Chile.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Es un misil submarino! Se lanza en un clavado perfecto a gran velocidad y sus ojos pueden ver debajo del agua sin problemas.",
+      "datoCurioso": "Su nido es un túnel largo excavado con su pico en los barrancos de tierra a orillas de los ríos. ¡Tiene una casa subterránea!",
+      "colorPrincipal": "#008B8B",
+      "medallaNombre": "El Pescador Relámpago"
+    },
+    "coordenadasEjemplo": [-41.4689, -72.9411]
+  },
+  {
+    "id": "ave-009",
+    "nombreComun": "Picaflor de Juan Fernández",
+    "nombreCientifico": "Sephanoides fernandensis",
+    "zona": "Islas",
+    "emoji": "🌺",
+    "pinColor": "#FF4500",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/SREOIEKXNX/Sephanoides_fernandensis_song.mp3",
+    "fraseNino": "¡Hola! Soy el Picaflor de Juan Fernández. Soy un tesoro del océano Pacífico porque solo vivo en una isla maravillosa de Chile. El macho es de color naranja brillante y la hembra es verde mar.",
+    "datosAdulto": {
+      "habitat": "Bosques nativos y jardines de la Isla Robinson Crusoe, en el Archipiélago de Juan Fernández. Altamente dependiente de flores nativas.",
+      "estadoConservacion": "En Peligro Crítico (CR) — IUCN",
+      "mesesAvistamiento": ["Sep", "Oct", "Nov", "Dic", "Ene"]
+    },
+    "datosNino": {
+      "superpoder": "¡Es una joya flotante única! Sus alas baten tan rápido (más de 50 veces por segundo) que puede quedarse suspendido en el aire como un dron.",
+      "datoCurioso": "Es uno de los picaflores más raros y amenazados del planeta entero. ¡Debemos proteger mucho sus flores!",
+      "colorPrincipal": "#FF4500",
+      "medallaNombre": "La Joya del Océano"
+    },
+    "coordenadasEjemplo": [-33.6382, -78.8354]
+  },
+  {
+    "id": "ave-010",
+    "nombreComun": "Pingüino de Humboldt",
+    "nombreCientifico": "Spheniscus humboldti",
+    "zona": "Norte-Centro",
+    "emoji": "🐧",
+    "pinColor": "#2F4F4F",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Spheniscus_humboldti_vocalization.mp3",
+    "fraseNino": "¡Hola, nado por aquí! Soy el Pingüino de Humboldt. Aunque soy un ave, cambié mis plumas para tener un traje de buceo genial. ¡No puedo volar por el cielo, pero nado como un torpedo!",
+    "datosAdulto": {
+      "habitat": "Costas e islas e islotes a lo largo de la corriente de Humboldt desde el norte hasta la zona centro, nidificando en cuevas o madrigueras.",
+      "estadoConservacion": "Vulnerable (VU) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Es el súper buceador! Sus alas funcionan como aletas perfectas y puede aguantar la respiración bajo el mar por varios minutos.",
+      "datoCurioso": "Usa un traje de etiqueta natural (espalda negra y pecho blanco) que le sirve como camuflaje perfecto contra tiburones y focas.",
+      "colorPrincipal": "#2F4F4F",
+      "medallaNombre": "El Torpedo Marino"
+    },
+    "coordenadasEjemplo": [-29.2608, -71.5111]
+  },
+  {
+    "id": "ave-011",
+    "nombreComun": "Churrín de la Costa",
+    "nombreCientifico": "Scytalopus fuscus",
+    "zona": "Centro",
+    "emoji": "🌑",
+    "pinColor": "#4A4A4A",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/XBTZLMUYEC/Scytalopus_fuscus.mp3",
+    "fraseNino": "¡Hola! Soy el Churrín de la Costa. Soy muy pequeñito y de color gris oscuro, casi como un ratoncito. Me encanta andar saltando entre los matorrales secos cerca de la playa.",
+    "datosAdulto": {
+      "habitat": "Matorrales densos, quebradas sombrías y zonas de matorral esclerófilo cerca de las costas de la zona central de Chile.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Es el rey de las escondidas! Es tan hábil ocultándose entre las ramas bajas que los científicos lo escuchan mucho pero casi nunca lo ven.",
+      "datoCurioso": "Su nombre científico significa 'pata de esqueleto' porque sus patitas son largas y delgadas para correr rápido por la tierra.",
+      "colorPrincipal": "#4A4A4A",
+      "medallaNombre": "El Amo de las Escondidas"
+    },
+    "coordenadasEjemplo": [-32.7833, -71.5167]
+  },
+  {
+    "id": "ave-012",
+    "nombreComun": "Bandurria",
+    "nombreCientifico": "Theristicus melanopis",
+    "zona": "Centro-Sur",
+    "emoji": "🎷",
+    "pinColor": "#CD853F",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/3/30/Theristicus_caerulescens_sound.mp3",
+    "fraseNino": "¡Cuac, cuac, cuac! Soy la Bandurria. Tengo un pico largo y curvado que uso como una sonda mágica para buscar comida en el barro. ¡Mi grito es tan fuerte que parezco una trompeta desafinada!",
+    "datosAdulto": {
+      "habitat": "Campos de pastoreo, praderas húmedas, humedales, lagunas y pantanos bajos desde Santiago hasta Tierra del Fuego.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Sep", "Oct", "Nov", "Dic", "Ene"]
+    },
+    "datosNino": {
+      "superpoder": "¡Pico detector! Su pico largo está lleno de súper sensores que sienten los gusanos e insectos enterrados sin tener que verlos.",
+      "datoCurioso": "A pesar de ser aves grandes que caminan por el pasto, les encanta hacer sus nidos en las copas de los árboles más altos o en postes de luz.",
+      "colorPrincipal": "#CD853F",
+      "medallaNombre": "La Trompeta del Campo"
+    },
+    "coordenadasEjemplo": [-38.7396, -72.5903]
+  },
+  {
+    "id": "ave-013",
+    "nombreComun": "Cachudito",
+    "nombreCientifico": "Anairetes parulus",
+    "zona": "Norte-Centro-Sur",
+    "emoji": "😈",
+    "pinColor": "#556B2F",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/TNVYAKBCHM/Anairetes_parulus_canto.mp3",
+    "fraseNino": "¡Hola, mírame aquí! Soy el Cachudito. Soy una de las aves más pequeñas de Chile y llevo dos plumas largas en mi cabeza que parecen pequeños cuernitos. ¡Soy muy copuchento y movedizo!",
+    "datosAdulto": {
+      "habitat": "Matorrales, bordes de bosques, jardines, parques urbanos y zonas andinas bajas desde Atacama hasta el extremo sur.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Es el acróbata saltarín! Es tan liviano que puede colgarse de cabeza en las hojas más delgadas para cazar pulgones.",
+      "datoCurioso": "Su nido es una taza diminuta y perfecta hecha de musgo y líquenes, forrada por dentro con plumas muy suaves.",
+      "colorPrincipal": "#556B2F",
+      "medallaNombre": "El Duendecito Con Cuernos"
+    },
+    "coordenadasEjemplo": [-33.4500, -70.6800]
+  },
+  {
+    "id": "ave-014",
+    "nombreComun": "Carpintero Negro",
+    "nombreCientifico": "Campephilus magellanicus",
+    "zona": "Sur",
+    "emoji": "🔨",
+    "pinColor": "#8B0000",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/b/bd/Campephilus_magellanicus.mp3",
+    "fraseNino": "¡Toc, toc, toc! Soy el Carpintero Negro, el gigante de los bosques del sur. Si ves a alguien con un casco rojo brillante tallando los árboles, ¡ese soy yo o mi familia! Busco bichitos en la madera vieja.",
+    "datosAdulto": {
+      "habitat": "Bosques nativos maduros de Nothofagus (coihues, lengas, robles) en el sur de Chile y la Patagonia.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Súper martillo! Su cabeza y pico son tan fuertes que golpea la madera a gran velocidad sin que le dé dolor de cabeza jamás.",
+      "datoCurioso": "El macho tiene la cabeza completamente roja como un tomate, mientras que la hembra es toda negra con un elegante copete rizado.",
+      "colorPrincipal": "#8B0000",
+      "medallaNombre": "El Constructor del Bosque"
+    },
+    "coordenadasEjemplo": [-45.5712, -72.0685]
+  },
+  {
+    "id": "ave-015",
+    "nombreComun": "Cometocino Patagónico",
+    "nombreCientifico": "Phrygilus patagonicus",
+    "zona": "Sur",
+    "emoji": "☀️",
+    "pinColor": "#FFD700",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/KTBTZEKDXM/Phrygilus_patagonicus_vocal.mp3",
+    "fraseNino": "¡Hola! Soy el Cometocino Patagónico. Tengo un plumaje hermoso con la espalda gris y la guatita amarilla brillante como el sol. Los arrieros antiguos me llamaban así porque me acercaba a sus campamentos.",
+    "datosAdulto": {
+      "habitat": "Bordes de bosques nativos, claros de árboles, huertos y jardines en la zona sur y canales australes.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Nov", "Dic", "Ene", "Feb"]
+    },
+    "datosNino": {
+      "superpoder": "¡El amigo del campamento! Es súper curioso y valiente; le encanta acercarse a las fogatas y mochileros para ver qué están haciendo.",
+      "datoCurioso": "Aunque su nombre diga que come tocino, en realidad prefiere comer semillas dulces, brotes verdes y pequeños insectos.",
+      "colorPrincipal": "#FFD700",
+      "medallaNombre": "El Sol de la Patagonia"
+    },
+    "coordenadasEjemplo": [-53.1638, -70.9171]
+  },
+  {
+    "id": "ave-016",
+    "nombreComun": "Cisne de Cuello Negro",
+    "nombreCientifico": "Cygnus melancoryphus",
+    "zona": "Centro-Sur",
+    "emoji": "🦢",
+    "pinColor": "#4682B4",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Cygnus_melancoryphus_sound.mp3",
+    "fraseNino": "¡Hola! Soy el Cisne de Cuello Negro. Soy el ave acuática más elegante de los lagos y humedales chilenos. Mi cuerpo es blanco como la nieve, pero mi cuello es negro como el carbón.",
+    "datosAdulto": {
+      "habitat": "Grandes lagos, lagunas de agua dulce, humedales costeros y estuarios con abundante vegetación subacuática (coique).",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Súper canoa familiar! Cuando mis polluelos nacen y están cansados, se suben a mi espalda y yo los llevo a pasear navegando por el agua.",
+      "datoCurioso": "Tienen una mancha roja inflamada sobre su pico que se llama 'carúncula'. ¡Es como un adorno de la realeza!",
+      "colorPrincipal": "#4682B4",
+      "medallaNombre": "El Capitán de los Lagos"
+    },
+    "coordenadasEjemplo": [-39.8250, -73.2210]
+  },
+  {
+    "id": "ave-017",
+    "nombreComun": "Cercanito / Rayadito",
+    "nombreCientifico": "Aphrastura spinicauda",
+    "zona": "Sur",
+    "emoji": "🎒",
+    "pinColor": "#8B4513",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/OIPYUKXNBM/Aphrastura_spinicauda_call.mp3",
+    "fraseNino": "¡Hola, hola! Soy el Rayadito. Llevo rayas negras y amarillas en mi cabeza como si tuviera un peinado de carreras. Vivimos en grupos grandes y conversamos todo el día entre las ramas.",
+    "datosAdulto": {
+      "habitat": "Bosques nativos templados y templados lluviosos, prefiriendo árboles viejos con cavidades naturales para anidar.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡El detective del árbol! Revisa centímetro a centímetro la corteza de los árboles buscando bichitos escondidos, colgado de lado o boca abajo.",
+      "datoCurioso": "Las puntas de las plumas de su cola terminan en espinas delgadas. ¡Parece una colita de dinosaurio!",
+      "colorPrincipal": "#8B4513",
+      "medallaNombre": "El Detective Forestal"
+    },
+    "coordenadasEjemplo": [-40.1234, -72.5678]
+  },
+  {
+    "id": "ave-018",
+    "nombreComun": "Chuncho",
+    "nombreCientifico": "Glaucidium nana",
+    "zona": "Centro-Sur",
+    "emoji": "🦉",
+    "pinColor": "#3E2723",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Glaucidium_gnoma_sound.mp3",
+    "fraseNino": "¡Hola! Soy el Chuncho, el búho más pequeñito de Chile. ¡Que no te engañe mi tamaño de juguete! Soy un cazador nocturno muy valiente y feroz, y tengo ojos falsos pintados detrás de mi cabeza.",
+    "datosAdulto": {
+      "habitat": "Bosques, huertos, parques, jardines arbolados y matorrales. Caza tanto de noche como de día a diferencia de otros búhos.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Doble mirada! Tiene dos manchas negras con blanco detrás de la cabeza que parecen ojos gigantes. ¡Así confunde a los enemigos que quieren atacarlo por la espalda!",
+      "datoCurioso": "Es tan valiente que puede cazar presas que son el doble de grandes que él. ¡Un verdadero mini guerrero!",
+      "colorPrincipal": "#3E2723",
+      "medallaNombre": "El Mini Guerrero Nocturno"
+    },
+    "coordenadasEjemplo": [-33.5000, -70.7000]
+  },
+  {
+    "id": "ave-019",
+    "nombreComun": "Tenca",
+    "nombreCientifico": "Mimus thenca",
+    "zona": "Centro",
+    "emoji": "🎤",
+    "pinColor": "#696969",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/TYNMUZBCHG/Mimus_thenca_canto.mp3",
+    "fraseNino": "¡Hola! Soy la Tenca. Soy un ave muy elegante de color gris y cola larga. Mi gran talento es que soy la imitadora número uno de la naturaleza. ¡Puedo cantar igual que las otras aves!",
+    "datosAdulto": {
+      "habitat": "Zonas de matorral esclerófilo, campos abiertos, valles, colinas bajas y parques urbanos de la zona central de Chile.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡La voz de mil aves! Es capaz de copiar el canto del zorzal, del queltehue o de la loica tan perfecto que engaña a cualquiera.",
+      "datoCurioso": "Es un ave endémica de Chile, lo que significa que nació aquí y es nuestro tesoro exclusivo.",
+      "colorPrincipal": "#696969",
+      "medallaNombre": "La Imitadora Estrella"
+    },
+    "coordenadasEjemplo": [-33.0000, -71.2000]
+  },
+  {
+    "id": "ave-020",
+    "nombreComun": "Turca",
+    "nombreCientifico": "Pteroptochos megapodius",
+    "zona": "Centro",
+    "emoji": "🦘",
+    "pinColor": "#A0522D",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/WPYUMZBCKX/Pteroptochos_megapodius.mp3",
+    "fraseNino": "¡Hola! Soy la Turca. Si vas caminando por los cerros secos de la zona central, me verás corriendo a toda velocidad entre las rocas con mi colita levantada. ¡Prefiero correr que volar!",
+    "datosAdulto": {
+      "habitat": "Laderas de cerros áridos con matorrales, colinas rocosas y quebradas secas de la zona central.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Súper garras excavadoras! Mis patas son gigantes y fuertes como excavadoras de verdad. Puedo hacer túneles largos en la tierra para poner mis huevos.",
+      "datoCurioso": "Su canto suena como una risa fuerte que baja de tono: '¡Ja-ja-ja-ja-ju-ju-ju!'. ¡Parece que se estuviera burlando!",
+      "colorPrincipal": "#A0522D",
+      "medallaNombre": "La Corredora de los Cerros"
+    },
+    "coordenadasEjemplo": [-33.1500, -70.6000]
+  },
+  {
+    "id": "ave-021",
+    "nombreComun": "Pileu / Fiofío",
+    "nombreCientifico": "Elaenia albiceps",
+    "zona": "Norte-Centro-Sur",
+    "emoji": "✈️",
+    "pinColor": "#708090",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4e/Elaenia_albiceps_song.mp3",
+    "fraseNino": "¡Hola! Soy el Fiofío. Vengo llegando de un viaje larguísimo desde los bosques de Brasil. Llego a Chile cada primavera a criar a mis polluelos y mi silbido suena exacto como mi nombre: '¡Fio-fío!'",
+    "datosAdulto": {
+      "habitat": "Bosques nativos, matorrales, jardines y plantaciones. Es un ave migratoria que pasa el verano en Chile y el invierno en el Amazonas.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Oct", "Nov", "Dic", "Ene", "Feb"]
+    },
+    "datosNino": {
+      "superpoder": "¡El súper viajero viajador! Vuela miles de kilómetros cruzando selvas y montañas sin perderse nunca gracias a su brújula interna.",
+      "datoCurioso": "Tiene una pequeña corona blanca oculta en su cabeza que solo muestra cuando se enoja o se emociona.",
+      "colorPrincipal": "#708090",
+      "medallaNombre": "El Gran Explorador Viajero"
+    },
+    "coordenadasEjemplo": [-36.8201, -73.0444]
+  },
+  {
+    "id": "ave-022",
+    "nombreComun": "Tiuke / Tiuque",
+    "nombreCientifico": "Milvago chimango",
+    "zona": "Centro-Sur",
+    "emoji": "🕵️",
+    "pinColor": "#8B5A2B",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/d/dd/Milvago_chimango.mp3",
+    "fraseNino": "¡Hola! Soy el Tiuque. Soy un ave rapaz muy inteligente y astuta. Me verás siempre vigilando desde los postes de luz o caminando por los campos buscando comida. ¡Soy el limpiador de los caminos!",
+    "datosAdulto": {
+      "habitat": "Campos agrícolas, áreas urbanas, bordes de caminos, playas y praderas abiertas. Muy adaptable.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Vista de rayos X! Veo desde las nubes un pequeño insecto o semilla en el suelo y bajo de inmediato a recogerlo.",
+      "datoCurioso": "Le encanta jugar en el aire con sus amigos haciendo piruetas y volteretas divertidas cuando hay mucho viento.",
+      "colorPrincipal": "#8B5A2B",
+      "medallaNombre": "El Vigilante de Caminos"
+    },
+    "coordenadasEjemplo": [-34.5000, -71.0000]
+  },
+  {
+    "id": "ave-023",
+    "nombreComun": "Cachirla",
+    "nombreCientifico": "Anthus correndera",
+    "zona": "Centro-Sur",
+    "emoji": "🌾",
+    "pinColor": "#B8860B",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/OIKYUTXNBM/Anthus_correndera.mp3",
+    "fraseNino": "¡Hola! Soy la Cachirla. Vivo camuflada entre los pastizales secos. Cuando quiero cantar, subo volando muy alto al cielo y luego me dejo caer como un paracaídas mientras silbo.",
+    "datosAdulto": {
+      "habitat": "Pastizales húmedos, praderas bajas, campos de cultivo y bordes de humedales en valles y llanuras.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Canto en paracaídas! Vuela muy alto en línea recta y se lanza planeando con las alas abiertas cantando una melodía hermosa.",
+      "datoCurioso": "Sus plumas tienen exactamente el mismo color del pasto seco, así que si se queda quieta, ¡nadie puede verla!",
+      "colorPrincipal": "#B8860B",
+      "medallaNombre": "La Cantante Paracaidista"
+    },
+    "coordenadasEjemplo": [-35.2000, -71.6000]
+  },
+  {
+    "id": "ave-024",
+    "nombreComun": "Jilguero",
+    "nombreCientifico": "Spinus barbatus",
+    "zona": "Centro-Sur",
+    "emoji": "🍋",
+    "pinColor": "#EEEE00",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Spinus_barbatus_song.mp3",
+    "fraseNino": "¡Hola, amiguito! Soy el Jilguero. Soy pequeñito, alegre y ando siempre con mi traje amarillo limón. Nos encanta volar en bandadas grandes cantando todos juntos como un coro de música.",
+    "datosAdulto": {
+      "habitat": "Bordes de bosques, huertos, jardines urbanos, zonas agrícolas y matorrales andinos bajos.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Sep", "Oct", "Nov", "Dic", "Ene"]
+    },
+    "datosNino": {
+      "superpoder": "¡Súper alegría musical! Su canto es súper rápido, alegre y lleno de trinos. ¡Escucharlo alegra el día a cualquier explorador!",
+      "datoCurioso": "Les encanta comer las semillas tiernas de los cardos que crecen en los caminos. ¡Tienen un pico ideal para pelar semillas!",
+      "colorPrincipal": "#EEEE00",
+      "medallaNombre": "El Coro Amarillo"
+    },
+    "coordenadasEjemplo": [-37.0000, -72.5000]
+  },
+  {
+    "id": "ave-025",
+    "nombreComun": "Diuca",
+    "nombreCientifico": "Diuca diuca",
+    "zona": "Centro-Sur",
+    "emoji": "🌅",
+    "pinColor": "#778899",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/0/07/Diuca_diuca_song.mp3",
+    "fraseNino": "¡Hola! Soy la Diuca. Soy un ave de color gris con una linda mancha blanca en mi guatita. En los campos me conocen muy bien porque soy el despertador de la naturaleza: ¡canto antes de que salga el sol!",
+    "datosAdulto": {
+      "habitat": "Campos abiertos, zonas agrícolas, valles secos, matorrales y jardines suburbanos desde Coquimbo hasta el Biobío.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡El despertador solar! Es la primera ave en cantar cuando el cielo aún está oscuro, avisando a todos que ya viene el nuevo día.",
+      "datoCurioso": "Es súper buena vecina y le gusta andar en el suelo recolectando granitos junto a otros pajaritos.",
+      "colorPrincipal": "#778899",
+      "medallaNombre": "La Voz del Amanecer"
+    },
+    "coordenadasEjemplo": [-33.8000, -71.0000]
+  },
+  {
+    "id": "ave-026",
+    "nombreComun": "Yeco / Cormorán Negro",
+    "nombreCientifico": "Phalacrocorax brasilianus",
+    "zona": "Norte-Centro-Sur",
+    "emoji": "⚓",
+    "pinColor": "#1C1C1C",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/5/52/Phalacrocorax_brasilianus.mp3",
+    "fraseNino": "¡Hola! Soy el Yeco. Me verás siempre en las rocas del mar o en los muelles de los puertos. Como mis plumas se mojan cuando buceo para pescar, me siento al sol con las alas abiertas para secarme.",
+    "datosAdulto": {
+      "habitat": "Costas marinas, lagos chilenos, ríos, estuarios, lagunas artificiales y muelles de puertos comerciales.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡El buzo de profundidad! Puede nadar bajo el agua usando sus patas como motores para perseguir peces muy rápido.",
+      "datoCurioso": "A diferencia de los patos, sus plumas no tienen aceite impermeable, por eso tiene que posar como un escudo medieval al sol para secarse.",
+      "colorPrincipal": "#1C1C1C",
+      "medallaNombre": "El Marinero Al Sol"
+    },
+    "coordenadasEjemplo": [-29.9000, -71.3000]
+  },
+  {
+    "id": "ave-027",
+    "nombreComun": "Churrete Costero",
+    "nombreCientifico": "Cinclodes nigrofumosus",
+    "zona": "Norte-Centro",
+    "emoji": "🌊",
+    "pinColor": "#4E3629",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/WNYUKXBCMG/Cinclodes_nigrofumosus.mp3",
+    "fraseNino": "¡Cuidado con la ola! Soy el Churrete Costero. Vivo exclusivamente en las rocas donde revientan las olas del mar. Busco caracolitos y cangrejos saltando justo antes de que el agua me moje.",
+    "datosAdulto": {
+      "habitat": "Costas rocosas marinas chilenas, acantilados costeros e islotes expuestos al fuerte oleaje del océano Pacífico.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Súper esquiva-olas! Calcula el tiempo perfecto del mar para sacar comida de las rocas húmedas y vuela un segundo antes de que la ola reviente.",
+      "datoCurioso": "Es un ave endémica de la costa chilena. ¡Le encanta el agua salada pero no sabe nadar, solo salta!",
+      "colorPrincipal": "#4E3629",
+      "medallaNombre": "El Surfista de las Rocas"
+    },
+    "coordenadasEjemplo": [-30.0000, -71.4000]
+  },
+  {
+    "id": "ave-028",
+    "nombreComun": "Zarapito Común",
+    "nombreCientifico": "Numenius phaeopus",
+    "zona": "Norte-Centro-Sur",
+    "emoji": "🏖️",
+    "pinColor": "#D2B48C",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Numenius_phaeopus_vocalization.mp3",
+    "fraseNino": "¡Hola desde la playa! Soy el Zarapito. Vengo viajando desde el hemisferio norte (Alaska) para pasar las vacaciones en las playas chilenas. ¡Mi pico es largo y curvado hacia abajo como una gran banana!",
+    "datosAdulto": {
+      "habitat": "Playas de arena, llanuras de fango, estuarios, humedales costeros y roqueríos a lo largo de todo el litoral.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Oct", "Nov", "Dic", "Ene", "Feb", "Mar"]
+    },
+    "datosNino": {
+      "superpoder": "¡Super pinza playera! Su pico curvado entra profundo en los agujeros de la arena para atrapar cangrejos de playa que creen estar bien escondidos.",
+      "datoCurioso": "Es un gran viajero internacional: cruza todo el continente americano dos veces al año para escapar del frío del polo norte.",
+      "colorPrincipal": "#D2B48C",
+      "medallaNombre": "El Turista Playero"
+    },
+    "coordenadasEjemplo": [-36.6000, -73.1000]
+  },
+  {
+    "id": "ave-029",
+    "nombreComun": "Garza Grande",
+    "nombreCientifico": "Ardea alba",
+    "zona": "Norte-Centro-Sur",
+    "emoji": "🥢",
+    "pinColor": "#F5F5F5",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/2/21/Ardea_alba_sound.mp3",
+    "fraseNino": "¡Hola! Soy la Garza Grande. Soy alta, blanca y tengo un cuello largo que se dobla como una letra 'S'. Camino muy despacio por el agua, como si estuviera jugando a las estatuas, esperando cazar un pez.",
+    "datosAdulto": {
+      "habitat": "Bordes de lagunas, ríos, humedales, tranques, canales de regadío y costas marinas tranquilas de todo el país.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡La lanza invisible! Se queda completamente inmóvil por minutos y, cuando pasa un pez, estira su cuello como un resorte atrapándolo al instante.",
+      "datoCurioso": "A pesar de ser tan grande y alta, es súper liviana porque sus huesos están llenos de aire para poder volar suave.",
+      "colorPrincipal": "#F5F5F5",
+      "medallaNombre": "La Estatua del Humedal"
+    },
+    "coordenadasEjemplo": [-34.8000, -71.5000]
+  },
+  {
+    "id": "ave-030",
+    "nombreComun": "Pato Jergón Grande",
+    "nombreCientifico": "Anas georgica",
+    "zona": "Norte-Centro-Sur",
+    "emoji": "🦆",
+    "pinColor": "#BC8F8F",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Anas_georgica_sound.mp3",
+    "fraseNino": "¡Cua-cua! Soy el Pato Jergón Grande, el pato más común de las lagunas de Chile. Mi cuerpo es de color pardo con manchas y tengo un pico amarillo brillante con una línea negra al medio.",
+    "datosAdulto": {
+      "habitat": "Cuerpos de agua dulce y salobre: lagunas, estanques agrícolas, ríos de corriente lenta, estuarios y costas.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Súper nadador todoterreno! Puede vivir tanto en el altiplano helado del norte como en los canales lluviosos del sur sin problemas.",
+      "datoCurioso": "Cuando quiere comer las plantitas del fondo de la laguna, pone la cabeza abajo y deja la colita apuntando al cielo. ¡Parece un flotador al revés!",
+      "colorPrincipal": "#BC8F8F",
+      "medallaNombre": "El Nadador Todoterreno"
+    },
+    "coordenadasEjemplo": [-33.4000, -70.8000]
+  },
+  {
+    "id": "ave-031",
+    "nombreComun": "Tero Serrano / Queltehue de la Puna",
+    "nombreCientifico": "Vanellus resplendens",
+    "zona": "Norte",
+    "emoji": "🏔️",
+    "pinColor": "#305030",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/KOTYUTXNBM/Vanellus_resplendens.mp3",
+    "fraseNino": "¡Hola desde las alturas! Soy el Queltehue de la Puna. Soy primo del queltehue común, pero vivo muy arriba en las montañas del norte, donde hace mucho frío. ¡Mis alas brillan con tonos verdes y bronce al sol!",
+    "datosAdulto": {
+      "habitat": "Bofedales, praderas húmedas altoandinas y bordes de lagunas saladas en la región de la Puna, sobre los 3.500 metros de altitud.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Ene", "Feb", "Mar", "Nov", "Dic"]
+    },
+    "datosNino": {
+      "superpoder": "¡Resistencia extrema al frío! Vive donde el agua se congela por las noches y el aire es muy escaso, siempre activo y vigilante.",
+      "datoCurioso": "Su grito es igual de escandaloso que el de su primo del valle, avisando a las vicuñas si viene algún peligro.",
+      "colorPrincipal": "#305030",
+      "medallaNombre": "El Guardián del Altiplano"
+    },
+    "coordenadasEjemplo": [-18.4744, -69.2631]
+  },
+  {
+    "id": "ave-032",
+    "nombreComun": "Cisne Coscoroba",
+    "nombreCientifico": "Coscoroba coscoroba",
+    "zona": "Sur",
+    "emoji": "🪶",
+    "pinColor": "#EAEAEA",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e2/Coscoroba_coscoroba_vocalization.mp3",
+    "fraseNino": "¡Cos-co-ro-va! Mi nombre es mi canto. Soy un cisne mediano completamente blanco con un pico de color rojo coral muy llamativo. ¡Parezco una mezcla entre un cisne elegante y un pato grande!",
+    "datosAdulto": {
+      "habitat": "Lagunas someras, lagos de agua dulce, marismas y pastizales húmedos de la zona austral y Magallanes.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Oct", "Nov", "Dic", "Ene", "Feb"]
+    },
+    "datosNino": {
+      "superpoder": "¡Voz de megáfono! Cuando cantamos en grupo nos escuchamos a kilómetros de distancia repitiendo mi nombre una y otra vez.",
+      "datoCurioso": "Las puntas de sus alas son de color negro, pero solo se ven cuando abre las alas para levantar el vuelo.",
+      "colorPrincipal": "#EAEAEA",
+      "medallaNombre": "El Corista Blanco"
+    },
+    "coordenadasEjemplo": [-51.7269, -72.5061]
+  },
+  {
+    "id": "ave-033",
+    "nombreComun": "Picaflor Cordillerano",
+    "nombreCientifico": "Oreotrochilus leucopleurus",
+    "zona": "Centro-Sur",
+    "emoji": "🏔️",
+    "pinColor": "#483D8B",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/JNYUMZBCKG/Oreotrochilus_leucopleurus.mp3",
+    "fraseNino": "¡Hola! Soy el Picaflor Cordillerano. A diferencia de mis primos de la ciudad, a mí me encantan las rocas y las flores duras de la Cordillera de los Andes. ¡Puedo vivir muy arriba en la montaña!",
+    "datosAdulto": {
+      "habitat": "Laderas andinas rocosas con arbustos bajos y quebradas con presencia de flores como la cajetilla, entre los 1.500 y 3.000 metros de altitud.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Nov", "Dic", "Ene", "Feb"]
+    },
+    "datosNino": {
+      "superpoder": "¡Modo hibernación! Como en la alta montaña las noches son congeladas, puedo bajar la temperatura de mi cuerpo para ahorrar energía, como si entrara en una súper siesta criogénica.",
+      "datoCurioso": "En vez de posarse solo en ramitas delgadas, sus patitas tienen garras fuertes adaptadas para agarrarse de las rocas verticales de los acantilados.",
+      "colorPrincipal": "#483D8B",
+      "medallaNombre": "El Escalador de la Cordillera"
+    },
+    "coordenadasEjemplo": [-33.5500, -70.2000]
+  },
+  {
+    "id": "ave-034",
+    "nombreComun": "Cacatúa / Choroy",
+    "nombreCientifico": "Enicognathus leptorhynchus",
+    "zona": "Sur",
+    "emoji": "🦜",
+    "pinColor": "#006400",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/d/de/Enicognathus_leptorhynchus_vocalization.mp3",
+    "fraseNino": "¡Hola, hola! ¡Cariño, loro! Soy el Choroy, el loro más famoso y travieso de Chile. Llevo un traje verde loro brillante con una mancha roja en mi frente y nos encanta andar en grupos gigantes armando mucha fiesta.",
+    "datosAdulto": {
+      "habitat": "Bosques nativos templados, campos agrícolas colindantes y huertos del sur de Chile, alimentándose de semillas de piñón (pehuén).",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Súper comunicación social! Podemos hablar, gritar y organizarnos en bandadas de cientos de loros para buscar comida juntos sin perder a nadie.",
+      "datoCurioso": "Tiene el pico de arriba muy largo y afilado que usa como una herramienta perfecta para abrir los duros piñones de las araucarias.",
+      "colorPrincipal": "#006400",
+      "medallaNombre": "El Travieso de los Bosques"
+    },
+    "coordenadasEjemplo": [-38.2500, -72.0000]
+  },
+  {
+    "id": "ave-035",
+    "nombreComun": "Cachaña",
+    "nombreCientifico": "Enicognathus ferrugineas",
+    "zona": "Sur",
+    "emoji": "🦜",
+    "pinColor": "#2E8B57",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/KTBTZEKDXM/Enicognathus_ferrugineus_call.mp3",
+    "fraseNino": "¡Hola! Soy la Cachaña. Soy el loro que vive más al sur del mundo entero, ¡aguanto hasta la nieve de la Patagonia! Soy un poco más pequeña que mi primo el choroy y mi pico es más corto.",
+    "datosAdulto": {
+      "habitat": "Bosques andino-patagónicos, laderas arboladas y claros de bosque de lenga y coihue hasta el cabo de Hornos.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Resistencia antártica! Mi plumaje es grueso y denso para protegerme del viento helado y las tormentas de nieve del extremo sur.",
+      "datoCurioso": "Nos encanta comer los brotes tiernos de los árboles y las semillas del roble austral colgadas de cabeza en las ramas.",
+      "colorPrincipal": "#2E8B57",
+      "medallaNombre": "El Loro de los Glaciares"
+    },
+    "coordenadasEjemplo": [-54.8000, -68.3000]
+  },
+  {
+    "id": "ave-036",
+    "nombreComun": "Changa / Jote de Cabeza Negra",
+    "nombreCientifico": "Coragyps atratus",
+    "zona": "Norte-Centro-Sur",
+    "emoji": "🖤",
+    "pinColor": "#0F0F0F",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4b/Coragyps_atratus_hiss.mp3",
+    "fraseNino": "¡Hola! Soy el Jote de Cabeza Negra. Mi plumaje es completamente negro y no tengo plumas en mi cabeza arrugada. Me verás planeando en círculos altos o limpiando la naturaleza con mis amigos.",
+    "datosAdulto": {
+      "habitat": "Áreas abiertas, vertederos, zonas costeras, campos agrícolas y cielos urbanos de casi todo Chile.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡El súper reciclador del planeta! Tengo un estómago ultra resistente que me permite comer restos orgánicos viejos eliminando bacterias dañinas del medio ambiente.",
+      "datoCurioso": "Para refrescar sus patitas cuando hace mucho calor en verano, las moja con su propia orina. ¡Un truco muy raro de supervivencia!",
+      "colorPrincipal": "#0F0F0F",
+      "medallaNombre": "El Reciclador del Aire"
+    },
+    "coordenadasEjemplo": [-33.0500, -71.6167]
+  },
+  {
+    "id": "ave-037",
+    "nombreComun": "Jote de Cabeza Colorada",
+    "nombreCientifico": "Cathartes aura",
+    "zona": "Norte-Centro-Sur",
+    "emoji": "🎈",
+    "pinColor": "#8B002B",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/OIKYUTXNBM/Cathartes_aura.mp3",
+    "fraseNino": "¡Hola! Soy el Jote de Cabeza Colorada. Llevo un sombrero natural de color rojo calvo brillante. Cuando vuelo, pongo mis alas en forma de letra 'V' y me balanceo con el viento como si fuera un volantín.",
+    "datosAdulto": {
+      "habitat": "Campos abiertos, desiertos del norte, zonas forestales, costas marinas y valles interiores de todo Chile.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Súper olfato de detective! Puedo oler mi comida desde kilómetros de distancia escondida bajo las copas de los árboles, algo que ningún otro jote puede hacer.",
+      "datoCurioso": "Usa las corrientes de aire caliente para subir al cielo y puede pasar horas planeando sin hacer ningún esfuerzo.",
+      "colorPrincipal": "#8B002B",
+      "medallaNombre": "El Súper Olfato del Cielo"
+    },
+    "coordenadasEjemplo": [-26.0000, -70.6000]
+  },
+  {
+    "id": "ave-038",
+    "nombreComun": "Gaviota Dominicana",
+    "nombreCientifico": "Larus dominicanus",
+    "zona": "Norte-Centro-Sur",
+    "emoji": "🌊",
+    "pinColor": "#94A3B8",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Larus_dominicanus_vocalization.mp3",
+    "fraseNino": "¡Caa-caa! Soy la Gaviota Dominicana, la dueña indiscutida de todas las playas y puertos de Chile. Mis alas son negras por arriba y mi cuerpo es blanco. ¡Siempre estoy atenta a ver si se te cae una papa frita!",
+    "datosAdulto": {
+      "habitat": "Costas marinas, puertos, estuarios, playas, lagos interiores y basurales urbanos de todo el territorio nacional.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Súper oportunista veloz! Soy capaz de comer casi cualquier cosa y tengo una agilidad increíble para atrapar comida al vuelo en el aire.",
+      "datoCurioso": "Cuando encuentro una almeja dura en la playa y no puedo abrirla, vuelo muy alto y la dejo caer sobre las rocas para que se rompa como un huevo.",
+      "colorPrincipal": "#94A3B8",
+      "medallaNombre": "La Reina de la Playa"
+    },
+    "coordenadasEjemplo": [-33.0200, -71.6300]
+  },
+  {
+    "id": "ave-039",
+    "nombreComun": "Gaviota de Cáhuil",
+    "nombreCientifico": "Chroicocephalus maculipennis",
+    "zona": "Centro-Sur",
+    "emoji": "🍫",
+    "pinColor": "#5C4033",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/KTBTZEKDXM/Chroicocephalus_maculipennis.mp3",
+    "fraseNino": "¡Hola! Soy la Gaviota de Cáhuil. ¿Viste mi cabeza? Durante la primavera se me pinta de un color café oscuro hermoso, ¡parece que me hubiera enterrado en un tacho de chocolate!",
+    "datosAdulto": {
+      "habitat": "Lagunas costeras, humedales de agua dulce, ríos, campos agrícolas arados y caletas de pescadores de la zona centro-sur.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Sep", "Oct", "Nov", "Dic", "Ene"]
+    },
+    "datosNino": {
+      "superpoder": "¡El camuflaje de temporada! En invierno mi cabeza se vuelve completamente blanca con solo una manchita negra, ¡cambio de look según el año!",
+      "datoCurioso": "Mi nombre se debe a la laguna de Cáhuil, un hermoso lugar en Chile donde nos encanta reunirnos a hacer nidos flotantes.",
+      "colorPrincipal": "#5C4033",
+      "medallaNombre": "La Máscara de Chocolate"
+    },
+    "coordenadasEjemplo": [-34.4844, -72.0156]
+  },
+  {
+    "id": "ave-040",
+    "nombreComun": "Picaflor Gigante",
+    "nombreCientifico": "Patagona gigas",
+    "zona": "Norte-Centro",
+    "emoji": "🌻",
+    "pinColor": "#8A9A86",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e6/Patagona_gigas_vocalization.mp3",
+    "fraseNino": "¡Hola! Soy el Picaflor Gigante. Soy el picaflor más grande de todo el planeta Tierra, ¡soy del tamaño de un zorzal! Mis alas baten más lento que las de mis primos chicos y vuelo como una golondrina.",
+    "datosAdulto": {
+      "habitat": "Laderas semiáridas de los cerros, valles con presencia de cactus, quillayes y plantas con flores tubulares en el norte y centro.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Sep", "Oct", "Nov", "Dic", "Ene"]
+    },
+    "datosNino": {
+      "superpoder": "¡El gigante de la categoría! Puedo tomar el doble de néctar de las flores que los otros colibríes y defender mi jardín con mucha fuerza.",
+      "datoCurioso": "Es un ave migratoria que viaja al norte del continente durante el invierno chileno buscando el calor eterno.",
+      "colorPrincipal": "#8A9A86",
+      "medallaNombre": "El Titán de las Flores"
+    },
+    "coordenadasEjemplo": [-32.5000, -70.9000]
+  },
+  {
+    "id": "ave-041",
+    "nombreComun": "Gaviota Garuma",
+    "nombreCientifico": "Leucophaeus modestus",
+    "zona": "Norte",
+    "emoji": "🏜️",
+    "pinColor": "#708090",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/KTBTZEKDXM/Leucophaeus_modestus.mp3",
+    "fraseNino": "¡Hola del desierto! Soy la Gaviota Garuma. Soy de color gris arena muy elegante. Aunque busco comida en las olas del mar, vuelo kilómetros hacia el desierto más seco del mundo para poner mis huevos en las rocas.",
+    "datosAdulto": {
+      "habitat": "Playas arenosas del norte para alimentarse; viaja hasta el interior del desierto de Atacama para anidar en planicies áridas.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Nov", "Dic", "Ene", "Feb"]
+    },
+    "datosNino": {
+      "superpoder": "¡La súper mamá del desierto! Mis huevos resisten el sol ardiente del día y el frío helado de la noche gracias a que los cuido sin agua ni sombra.",
+      "datoCurioso": "Nidifica en lugares tan secos y lejanos que los científicos tardaron años en encontrar dónde nacían sus polluelos. ¡Un misterio del desierto!",
+      "colorPrincipal": "#708090",
+      "medallaNombre": "La Heroína del Desierto"
+    },
+    "coordenadasEjemplo": [-22.5000, -69.8000]
+  },
+  {
+    "id": "ave-042",
+    "nombreComun": "Pequén",
+    "nombreCientifico": "Athene cunicularia",
+    "zona": "Norte-Centro",
+    "emoji": "🏜️",
+    "pinColor": "#CD853F",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fe/Athene_cunicularia_call.mp3",
+    "fraseNino": "¡Hola, mírame abajo! Soy el Pequén, la lechuza de tierra. A diferencia de otras lechuzas, a mí me encanta estar despierta de día sentada afuera de mi cueva en el suelo. ¡Muevo mi cabeza de lado a lado para saludarte!",
+    "datosAdulto": {
+      "habitat": "Zonas áridas, llanuras abiertas, dunas costeras, campos de pastoreo y terrenos abandonados con suelo arenoso donde excavar.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Ingeniero subterráneo! Sé cavar mis propios túneles bajo el suelo o reutilizar las cuevas de los conejos para hacer una fortaleza secreta para mi familia.",
+      "datoCurioso": "Cuando se asusta o vigila, hace una reverencia rápida hacia adelante como si fuera un actor saludando al público del teatro.",
+      "colorPrincipal": "#CD853F",
+      "medallaNombre": "La Lechuza Subterránea"
+    },
+    "coordenadasEjemplo": [-29.9500, -71.2500]
+  },
+  {
+    "id": "ave-043",
+    "nombreComun": "Lechuza Blanca",
+    "nombreCientifico": "Tyto alba",
+    "zona": "Norte-Centro-Sur",
+    "emoji": "🦉",
+    "pinColor": "#FFF8DC",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e2/Tyto_alba_hiss.mp3",
+    "fraseNino": "¡Hola de la noche! Soy la Lechuza Blanca. Tengo una hermosa cara blanca en forma de corazón. Vuelo en silencio absoluto por los campos persiguiendo ratoncitos. ¡Soy el fantasma bueno de la noche!",
+    "datosAdulto": {
+      "habitat": "Zonas agrícolas, campanarios de iglesias, graneros viejos, bosques abiertos y parques urbanos por todo Chile.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Oído de radar! Mis oídos están ocultos y asimétricos en mi cara, lo que me permite escuchar el más mínimo paso de un ratón bajo las hojas en oscuridad total.",
+      "datoCurioso": "Mis plumas son súper suaves y tienen un diseño especial que corta el viento. ¡Puedo volar al lado tuyo y no escucharás absolutamente nada!",
+      "colorPrincipal": "#FFF8DC",
+      "medallaNombre": "El Radar Silencioso"
+    },
+    "coordenadasEjemplo": [-33.6000, -70.9000]
+  },
+  {
+    "id": "ave-044",
+    "nombreComun": "Tucúquere",
+    "nombreCientifico": "Bubo virginianus magellanicus",
+    "zona": "Norte-Centro-Sur",
+    "emoji": "🦉",
+    "pinColor": "#4A3525",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c4/Bubo_virginianus_vocalization.mp3",
+    "fraseNino": "¡Tu-cú-que-re! Ese es mi canto místico de la noche. Soy el búho más grande y poderoso de Chile. Tengo unos ojos amarillos gigantes redondos y dos mechones de plumas que parecen orejas de gato.",
+    "datosAdulto": {
+      "habitat": "Bosques nativos, quebradas rocosas, zonas cordilleranas y acantilados áridos desde el norte extremo hasta Tierra del Fuego.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Súper visión nocturna! Mis ojos gigantes captan la más mínima luz de las estrellas, permitiéndome ver en la noche igual de claro que tú al mediodía.",
+      "datoCurioso": "Su nombre viene exactamente del sonido que hace su canto en el silencio del bosque: '¡Tu-cú-quere, tu-cú-quere!'.",
+      "colorPrincipal": "#4A3525",
+      "medallaNombre": "El Gran Sabio Nocturno"
+    },
+    "coordenadasEjemplo": [-35.5000, -71.3000]
+  },
+  {
+    "id": "ave-045",
+    "nombreComun": "Golondrina Chilena",
+    "nombreCientifico": "Tachycineta meyeni",
+    "zona": "Norte-Centro-Sur",
+    "emoji": "⚡",
+    "pinColor": "#1E3A8A",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/KTBTZEKDXM/Tachycineta_meyeni.mp3",
+    "fraseNino": "¡Hola, voy hecho un rayo! Soy la Golondrina Chilena. Mi espalda es azul metálico brillante y mi pecho es blanco. Me verás volando súper rápido arriba de las plazas atrapando mosquitos al vuelo.",
+    "datosAdulto": {
+      "habitat": "Campos abiertos, valles, áreas urbanas cerca del agua, lagunas y praderas de todo el país.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Sep", "Oct", "Nov", "Dic", "Ene", "Feb"]
+    },
+    "datosNino": {
+      "superpoder": "¡Caza acrobática supersónica! Puedo abrir mi boca gigante mientras vuelo a gran velocidad dando giros locos en el aire para comer insectos.",
+      "datoCurioso": "Nos encanta pararnos todas juntas en fila sobre los cables de la luz a descansar y conversar por las tardes.",
+      "colorPrincipal": "#1E3A8A",
+      "medallaNombre": "La Flecha Azul"
+    },
+    "coordenadasEjemplo": [-33.4300, -70.6500]
+  },
+  {
+    "id": "ave-046",
+    "nombreComun": "Chara / Rara",
+    "nombreCientifico": "Phytotoma rara",
+    "zona": "Centro-Sur",
+    "emoji": "🥕",
+    "pinColor": "#D97706",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Phytotoma_rara_sound.mp3",
+    "fraseNino": "¡Hola! Soy la Rara. Los agricultores me pusieron ese nombre porque mi canto no suena como música, ¡suena exacto como una puerta vieja oxidada abriéndose despacio! Al macho le encanta pintarse el pecho de color naranja zanahoria.",
+    "datosAdulto": {
+      "habitat": "Bordes de bosques, huertos frutales, jardines urbanos ricos en vegetación y campos agrícolas de la zona centro-sur.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Pico corta-hojas! Mi pico tiene pequeños dientes como una sierra de carpintero que uso para cortar hojitas verdes tiernas y brotes dulces.",
+      "datoCurioso": "Su canto es un sonido seco como: '¡Crrr-crrr-crrr!'. ¡Parece un juguete de madera roto!",
+      "colorPrincipal": "#D97706",
+      "medallaNombre": "La Puerta Oxidada"
+    },
+    "coordenadasEjemplo": [-36.0000, -72.0000]
+  },
+  {
+    "id": "ave-047",
+    "nombreComun": "Pilpilén Común",
+    "nombreCientifico": "Haematopus palliatus",
+    "zona": "Norte-Centro-Sur",
+    "emoji": "🏖️",
+    "pinColor": "#DC2626",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Haematopus_palliatus_vocalization.mp3",
+    "fraseNino": "¡Hola de la arena! Soy el Pilpilén. Soy un ave playera con un ojo amarillo loco y un pico gigante, largo y de color rojo fuego. Me verás caminando por las dunas cuidando mis nidos escondidos.",
+    "datosAdulto": {
+      "habitat": "Playas arenosas costeras, dunas, llanuras de marea y estuarios a lo largo de todo el litoral marítimo de Chile.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡El pico abre-almejas! Mi pico es plano y fuerte como un cuchillo de chef. Lo meto dentro de las conchas de los mariscos para abrirlos en un segundo.",
+      "datoCurioso": "Pone sus huevos directo en un hoyito en la arena sin usar ramas. ¡Sus huevos parecen piedras de playa, así nadie los pisa!",
+      "colorPrincipal": "#DC2626",
+      "medallaNombre": "El Cuchillo de la Playa"
+    },
+    "coordenadasEjemplo": [-33.3600, -71.6500]
+  },
+  {
+    "id": "ave-048",
+    "nombreComun": "Guanay",
+    "nombreCientifico": "Leucocarbo bougainvillii",
+    "zona": "Norte-Centro",
+    "emoji": "⚓",
+    "pinColor": "#212529",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/XBTZLMUYEC/Leucocarbo_bougainvillii.mp3",
+    "fraseNino": "¡Hola del océano! Soy el Guanay. Tengo el pecho blanco y la espalda negra, con un anillo rojo hermoso alrededor de mis ojos. Vivimos en islas con miles de amigos pescando juntos en el mar.",
+    "datosAdulto": {
+      "habitat": "Aguas costeras de la corriente de Humboldt e islas guaneras de la zona norte y centro de Chile.",
+      "estadoConservacion": "Vulnerable (VU) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡La súper pesca en equipo! Volamos miles de guanaes juntos formando una gran nube negra sobre el agua para acorralar cardúmenes de anchovetas.",
+      "datoCurioso": "Somos las aves más importantes de la historia del norte chileno, porque nuestro abono natural (guano) sirve para hacer crecer las plantas de todo el mundo.",
+      "colorPrincipal": "#212529",
+      "medallaNombre": "El Tesoro de las Islas"
+    },
+    "coordenadasEjemplo": [-23.0000, -70.5000]
+  },
+  {
+    "id": "ave-049",
+    "nombreComun": "Piquero",
+    "nombreCientifico": "Sula variegata",
+    "zona": "Norte-Centro",
+    "emoji": "🎯",
+    "pinColor": "#1D4ED8",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/XBTZLMUYEC/Sula_variegata.mp3",
+    "fraseNino": "¡Al agua pato! Soy el Piquero. Tengo un pico azul grisáceo largo y afilado. Mi juego favorito es volar alto sobre el mar azul y, cuando veo un pez, cierro mis alas y me lanzo de cabeza como una flecha.",
+    "datosAdulto": {
+      "habitat": "Aguas marinas costeras, acantilados e islas rocosas del norte y centro de Chile.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡El clavado perfecto! Me lanzo al mar desde 30 metros de altura a gran velocidad. Mi cabeza tiene súper bolsas de aire para amortiguar el golpe contra el agua.",
+      "datoCurioso": "Nuestras patitas tienen membranas como aletas de rana para nadar súper rápido atrapando peces bajo la espuma.",
+      "colorPrincipal": "#1D4ED8",
+      "medallaNombre": "La Flecha Marina"
+    },
+    "coordenadasEjemplo": [-20.2167, -70.1500]
+  },
+  {
+    "id": "ave-050",
+    "nombreComun": "Cuervo de Pantano",
+    "nombreCientifico": "Plegadis chihi",
+    "zona": "Norte-Centro",
+    "emoji": "🌾",
+    "pinColor": "#4C1D95",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/2/23/Plegadis_chihi_call.mp3",
+    "fraseNino": "¡Hola! Soy el Cuervo de Pantano. Mis plumas parecen oscuras, pero si me miras bajo el sol brillan con colores verdes, púrpuras y bronce mágicos, ¡como si tuviera un traje de arcoíris espacial!",
+    "datosAdulto": {
+      "habitat": "Humedales de agua dulce, pantanos bajos, vegas altoandinas en el norte y arrozales o esteros en la zona central.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Plumas holográficas mágicas! Puedo cambiar de color según el ángulo de la luz del sol para confundir a los depredadores en el pantano.",
+      "datoCurioso": "Tengo un pico muy largo y curvo hacia abajo que uso como una cuchara larga para sacar insectos del lodo.",
+      "colorPrincipal": "#4C1D95",
+      "medallaNombre": "El Brillo del Pantano"
+    },
+    "coordenadasEjemplo": [-32.9000, -71.1500]
+  },
+  {
+    "id": "ave-051",
+    "nombreComun": "Chorlo de la Puna",
+    "nombreCientifico": "Charadrius alticola",
+    "zona": "Norte",
+    "emoji": "🏜️",
+    "pinColor": "#8C7853",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/KOTYUTXNBM/Charadrius_alticola.mp3",
+    "fraseNino": "¡Hola de las lagunas blancas! Soy el Chorlo de la Puna. Soy un pajarito pequeño que corre muy rápido por las orillas de los salares del norte de Chile. ¡Llevo un collar negro muy coqueto en mi pecho!",
+    "datosAdulto": {
+      "habitat": "Márgenes de lagunas salinas, salares y bofedales del altiplano del norte de Chile, por sobre los 3.800 metros de altitud.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Ene", "Feb", "Mar", "Nov", "Dic"]
+    },
+    "datosNino": {
+      "superpoder": "¡Súper velocidad altiplánica! Corro por el lodo salado tan rápido que mis patitas parecen invisibles, escapando de los zorros.",
+      "datoCurioso": "Hago mis nidos en el suelo salado muy cerca del agua, mimetizándome con la costra de sal blanca.",
+      "colorPrincipal": "#8C7853",
+      "medallaNombre": "El Corredor del Salar"
+    },
+    "coordenadasEjemplo": [-19.2000, -68.9000]
+  },
+  {
+    "id": "ave-052",
+    "nombreComun": "Rayador",
+    "nombreCientifico": "Rynchops niger",
+    "zona": "Norte-Centro-Sur",
+    "emoji": "✂️",
+    "pinColor": "#1E293B",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3d/Rynchops_niger_vocalization.mp3",
+    "fraseNino": "¡Hola! Soy el Rayador. Tengo un diseño de pico único en el mundo: ¡mi mandíbula de abajo es mucho más larga que la de arriba! Vuelo al ras del agua cortándola como una tijera para pescar.",
+    "datosAdulto": {
+      "habitat": "Estuarios amplios, desembocaduras de ríos, playas de arena y lagunas costeras protegidas de las olas.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Nov", "Dic", "Ene", "Feb", "Mar"]
+    },
+    "datosNino": {
+      "superpoder": "¡La pesca de arrastre táctil! Vuelo rozando el agua con mi pico inferior abierto. Cuando choco contra un pez, mi pico se cierra solo como una trampa instantánea en milisegundos.",
+      "datoCurioso": "Soy una de las pocas aves que tiene pupilas verticales como los gatos para poder pescar de noche en la oscuridad.",
+      "colorPrincipal": "#1E293B",
+      "medallaNombre": "El Cortador del Agua"
+    },
+    "coordenadasEjemplo": [-36.7000, -73.1500]
+  },
+  {
+    "id": "ave-053",
+    "nombreComun": "Águila Mora",
+    "nombreCientifico": "Geranoaetus melanoleucus",
+    "zona": "Norte-Centro-Sur",
+    "emoji": "🦅",
+    "pinColor": "#334155",
+    "sonidoUrl": "https://upload.wikimedia.org/wikipedia/commons/0/07/Geranoaetus_melanoleucus_call.mp3",
+    "fraseNino": "¡Hola desde las alturas! Soy el Águila Mora. Soy una de las aves cazadoras más imponentes de los cerros chilenos. Mi pecho es blanco con rayas finas y mi espalda es gris oscuro. ¡Vigilo todo mi territorio desde las rocas más altas!",
+    "datosAdulto": {
+      "habitat": "Cerros, laderas andinas, montañas, valles áridos y zonas boscosas abiertas a lo largo de todo Chile.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Súper garras de acero! Tengo unas patas amarillas con uñas gigantes tan fuertes que puedo levantar presas pesadas directo hacia las cumbres.",
+      "datoCurioso": "Cuando los machos y hembras vuelan juntos en primavera, se toman de las garras en el aire haciendo piruetas mortales de juego.",
+      "colorPrincipal": "#334155",
+      "medallaNombre": "La Guardiana de las Cumbres"
+    },
+    "coordenadasEjemplo": [-33.3800, -70.5200]
+  },
+  {
+    "id": "ave-054",
+    "nombreComun": "Ñandú de la Patagonia",
+    "nombreCientifico": "Rhea pennata",
+    "zona": "Sur",
+    "emoji": "🦘",
+    "pinColor": "#A0522D",
+    "sonidoUrl": "https://xeno-canto.org/sounds/uploaded/KTBTZEKDXM/Rhea_pennata.mp3",
+    "fraseNino": "¡Hola, a correr se ha dicho! Soy el Ñandú de la Patagonia. Soy el ave más grande de Chile pero, ¡sorpresa!, no sé volar. ¡A cambio, tengo unas patas gigantes y fuertes con las que puedo correr más rápido que una bicicleta!",
+    "datosAdulto": {
+      "habitat": "Estepas patagónicas, llanuras arbustivas y pampas frías de las regiones de Aysén y Magallanes.",
+      "estadoConservacion": "Preocupación Menor (LC) — IUCN",
+      "mesesAvistamiento": ["Todo el año"]
+    },
+    "datosNino": {
+      "superpoder": "¡Súper velocidad terrestre! Puedo correr a 60 kilómetros por hora esquivando piedras y arbustos en la pampa sin caerme nunca.",
+      "datoCurioso": "En las familias de ñandúes, el papá es el superhéroe: él solo cuida los huevos y saca a pasear a todos los polluelos (charitos) juntos.",
+      "colorPrincipal": "#A0522D",
+      "medallaNombre": "El Corredor de la Pampa"
+    },
+    "coordenadasEjemplo": [-52.0000, -70.0000]
+  }
+]
