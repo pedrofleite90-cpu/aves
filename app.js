@@ -18,28 +18,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // EVITA LA CACHÉ: Añade un número único de tiempo para obligar al navegador a leer el aves.json real de 50 aves
 function cargarBaseDeDatos() {
+  // El truco es el "?t=" + timestamp, esto le dice al navegador: 
+  // "Este es un archivo nuevo, no uses el viejo"
   fetch(`aves.json?t=${new Date().getTime()}`)
     .then(response => {
-      if (!response.ok) throw new Error("Error al cargar aves.json");
+      if (!response.ok) throw new Error("Error en la carga");
       return response.json();
     })
     .then(data => {
       aves = data;
+      console.log("Aves cargadas:", aves.length); // Mira la consola (F12) para ver si dice 50
       
-      // Actualizar el contador en la interfaz
-      const txtContador = document.getElementById('contador-aves');
-      if (txtContador) {
-        txtContador.textContent = `🐦 ${aves.length} aves`;
-      }
+      // Actualizar contador visual
+      const contador = document.getElementById('contador-aves');
+      if (contador) contador.textContent = `🐦 ${aves.length} aves`;
       
       initMapa();
-      renderizarAlbum(); 
-      
-      if(aves.length > 0) {
-        seleccionarAve(aves[0], false); // Carga inicial sin mover bruscamente el mapa
-      }
+      renderizarAlbum();
+      if(aves.length > 0) seleccionarAve(aves[0], false);
     })
-    .catch(err => console.error("Error cargando aves.json: ", err));
+    .catch(err => {
+      console.error("No se pudo cargar el archivo, revisa la sintaxis del JSON:", err);
+    });
 }
 
 function initMapa() {
